@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Madzia Photography</title>
+		<link rel="stylesheet" href="styles.css" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<!-- Background animated elements -->
+		<div class="bg-animation">
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+		</div>
+
+		<nav class="nav">
+			<div class="nav-container">
+				<a href="#hero" class="nav-logo">Madzia</a>
+				<button class="nav-toggle" aria-label="Przełącz nawigację">
+					<span></span>
+					<span></span>
+					<span></span>
+				</button>
+				<ul class="nav-menu">
+					<li><a href="#portfolio" class="nav-link">Portfolio</a></li>
+					<li><a href="#about" class="nav-link">O mnie</a></li>
+					<li><a href="#contact" class="nav-link">Kontakt</a></li>
+				</ul>
+			</div>
+		</nav>
+
+		<section id="hero" class="hero">
+			<div class="hero-bg-overlay"></div>
+			<div class="hero-content">
+				<h1 class="hero-title">
+					<span class="hero-title-line">Uchwycenie</span>
+					<span class="hero-title-line">Chwil</span>
+				</h1>
+				<p class="hero-subtitle">
+					Opowiadanie historii poprzez fotografię
+				</p>
+				<a href="#portfolio" class="hero-cta">
+					<span>Zobacz Portfolio</span>
+					<div class="cta-bg"></div>
+				</a>
+			</div>
+			<div class="hero-scroll">
+				<span>Przewiń</span>
+				<div class="scroll-line"></div>
+			</div>
+		</section>
+
+		<section id="portfolio" class="portfolio">
+			<div class="container">
+				<h2 class="section-title">
+					<span class="title-text">Portfolio</span>
+					<div class="title-line"></div>
+				</h2>
+				<div class="portfolio-filters">
+					<button class="filter-btn active" data-filter="all">
+						Wszystkie
+					</button>
+					<button class="filter-btn" data-filter="Portrety">
+						Portrety
+					</button>
+					<button class="filter-btn" data-filter="Krajobrazy">
+						Krajobrazy
+					</button>
+					<button class="filter-btn" data-filter="Wydarzenia">
+						Wydarzenia
+					</button>
+				</div>
+				<div class="portfolio-grid">
+					<!-- Images will be loaded dynamically -->
+				</div>
+			</div>
+		</section>
+
+		<section id="about" class="about">
+			<div class="container">
+				<div class="about-content">
+					<div class="about-text">
+						<h2 class="section-title">
+							<span class="title-text">O mnie</span>
+							<div class="title-line"></div>
+						</h2>
+						<p class="about-paragraph">
+							Jestem pasjonatem fotografii, oddanym uchwyceniu
+							piękna w codziennych chwilach i wyjątkowych
+							wydarzeniach.
+						</p>
+						<p class="about-paragraph">
+							Z wieloletnim doświadczeniem w różnych stylach
+							fotografii, wnoszę unikalną perspektywę do każdej
+							sesji.
+						</p>
+						<div class="about-skills">
+							<div class="skill-item">
+								<span class="skill-number">5+</span>
+								<span class="skill-label"
+									>Lat doświadczenia</span
+								>
+							</div>
+							<div class="skill-item">
+								<span class="skill-number">200+</span>
+								<span class="skill-label"
+									>Zadowolonych klientów</span
+								>
+							</div>
+							<div class="skill-item">
+								<span class="skill-number">1000+</span>
+								<span class="skill-label"
+									>Zdjęć wykonanych</span
+								>
+							</div>
+						</div>
+					</div>
+					<div class="about-image">
+						<div class="image-frame">
+							<img
+								src="placeholder-about.jpg"
+								alt="O Madzi"
+								loading="lazy"
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="contact" class="contact">
+			<div class="container">
+				<h2 class="section-title">
+					<span class="title-text">Skontaktuj się</span>
+					<div class="title-line"></div>
+				</h2>
+				<div class="contact-content">
+					<div class="contact-info">
+						<div class="contact-item">
+							<h3>Email</h3>
+							<a href="mailto:hello@madzia.photo"
+								>hello@madzia.photo</a
+							>
+						</div>
+						<div class="contact-item">
+							<h3>Telefon</h3>
+							<a href="tel:+48123456789">+48 123 456 789</a>
+						</div>
+						<div class="contact-item">
+							<h3>Social Media</h3>
+							<div class="social-links">
+								<a href="#" class="social-link">Instagram</a>
+								<a href="#" class="social-link">Facebook</a>
+							</div>
+						</div>
+					</div>
+					<form class="contact-form">
+						<input type="text" placeholder="Twoje imię" required />
+						<input type="email" placeholder="Twój email" required />
+						<textarea
+							placeholder="Twoja wiadomość"
+							rows="5"
+							required
+						></textarea>
+						<button type="submit">
+							<span>Wyślij wiadomość</span>
+							<div class="button-bg"></div>
+						</button>
+					</form>
+				</div>
+			</div>
+		</section>
+
+		<footer class="footer">
+			<div class="container">
+				<p>
+					&copy; 2024 Madzia Photography. Wszelkie prawa zastrzeżone.
+				</p>
+			</div>
+		</footer>
+
+		<div class="image-modal">
+			<button class="modal-close">&times;</button>
+			<img src="" alt="" class="modal-image" />
+			<div class="modal-bg"></div>
+		</div>
+
+		<script src="script.js"></script>
+	</body>
+</html>

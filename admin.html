@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Panel Administracyjny - Madzia Photography</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--primary-color: #1a1a1a;
+				--secondary-color: #f8f8f8;
+				--accent-color: #d4af37;
+				--accent-dark: #b8941f;
+				--text-primary: #2c2c2c;
+				--text-secondary: #666;
+				--transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+				--shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+				--shadow-hover: 0 30px 80px rgba(0, 0, 0, 0.15);
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: "Inter", sans-serif;
+				background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+				color: var(--text-primary);
+				line-height: 1.6;
+			}
+
+			/* Background Animation */
+			.bg-animation {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				pointer-events: none;
+				z-index: -1;
+				overflow: hidden;
+			}
+
+			.floating-element {
+				position: absolute;
+				background: linear-gradient(
+					45deg,
+					rgba(212, 175, 55, 0.05),
+					rgba(212, 175, 55, 0.1)
+				);
+				border-radius: 50%;
+				animation: float 20s infinite ease-in-out;
+			}
+
+			.floating-element:nth-child(1) {
+				width: 80px;
+				height: 80px;
+				top: 10%;
+				left: 10%;
+				animation-delay: 0s;
+			}
+
+			.floating-element:nth-child(2) {
+				width: 120px;
+				height: 120px;
+				top: 70%;
+				right: 10%;
+				animation-delay: -5s;
+			}
+
+			.floating-element:nth-child(3) {
+				width: 60px;
+				height: 60px;
+				top: 30%;
+				right: 20%;
+				animation-delay: -10s;
+			}
+
+			@keyframes float {
+				0%,
+				100% {
+					transform: translateY(0px) rotate(0deg);
+					opacity: 0.5;
+				}
+				50% {
+					transform: translateY(-20px) rotate(180deg);
+					opacity: 1;
+				}
+			}
+
+			/* Container */
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 20px;
+			}
+
+			/* Header */
+			.header {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				padding: 30px;
+				border-radius: 20px;
+				box-shadow: var(--shadow);
+				margin-bottom: 40px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				border: 1px solid rgba(212, 175, 55, 0.1);
+			}
+
+			.header h1 {
+				font-family: "Playfair Display", serif;
+				color: var(--accent-color);
+				font-size: 2.5rem;
+				font-weight: 500;
+			}
+
+			.header-actions {
+				display: flex;
+				gap: 15px;
+				align-items: center;
+			}
+
+			.view-site-btn {
+				background: linear-gradient(
+					135deg,
+					var(--accent-color),
+					var(--accent-dark)
+				);
+				color: white;
+				border: none;
+				padding: 12px 24px;
+				border-radius: 50px;
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: 500;
+				text-decoration: none;
+				transition: var(--transition);
+			}
+
+			.view-site-btn:hover {
+				transform: translateY(-2px);
+				box-shadow: var(--shadow-hover);
+			}
+
+			.logout-btn {
+				background: #dc3545;
+				color: white;
+				border: none;
+				padding: 12px 24px;
+				border-radius: 50px;
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: 500;
+				transition: var(--transition);
+			}
+
+			.logout-btn:hover {
+				background: #c82333;
+				transform: translateY(-2px);
+			}
+
+			/* Login Form */
+			.login-form {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				padding: 50px;
+				border-radius: 20px;
+				box-shadow: var(--shadow-hover);
+				max-width: 450px;
+				margin: 100px auto;
+				border: 1px solid rgba(212, 175, 55, 0.1);
+			}
+
+			.login-form h2 {
+				font-family: "Playfair Display", serif;
+				text-align: center;
+				margin-bottom: 40px;
+				color: var(--accent-color);
+				font-size: 2.2rem;
+			}
+
+			/* Form Elements */
+			.form-group {
+				margin-bottom: 25px;
+			}
+
+			.form-group label {
+				display: block;
+				margin-bottom: 8px;
+				font-weight: 500;
+				color: var(--text-primary);
+			}
+
+			.form-group input,
+			.form-group select,
+			.form-group textarea {
+				width: 100%;
+				padding: 15px;
+				border: 2px solid #eee;
+				border-radius: 10px;
+				font-size: 14px;
+				font-family: inherit;
+				transition: var(--transition);
+				background: rgba(255, 255, 255, 0.8);
+			}
+
+			.form-group input:focus,
+			.form-group select:focus,
+			.form-group textarea:focus {
+				outline: none;
+				border-color: var(--accent-color);
+				box-shadow: 0 0 0 5px rgba(212, 175, 55, 0.1);
+				transform: translateY(-2px);
+			}
+
+			/* Buttons */
+			.btn {
+				background: linear-gradient(
+					135deg,
+					var(--accent-color),
+					var(--accent-dark)
+				);
+				color: white;
+				border: none;
+				padding: 15px 30px;
+				border-radius: 50px;
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: 500;
+				transition: var(--transition);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.btn:hover {
+				transform: translateY(-3px);
+				box-shadow: var(--shadow-hover);
+			}
+
+			.btn-secondary {
+				background: linear-gradient(135deg, #6c757d, #545b62);
+			}
+
+			.btn-danger {
+				background: linear-gradient(135deg, #dc3545, #c82333);
+			}
+
+			/* Dashboard */
+			.dashboard {
+				display: none;
+			}
+
+			.dashboard.active {
+				display: block;
+			}
+
+			/* Stats Cards */
+			.stats {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+				gap: 25px;
+				margin-bottom: 40px;
+			}
+
+			.stat-card {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				padding: 30px;
+				border-radius: 20px;
+				box-shadow: var(--shadow);
+				text-align: center;
+				transition: var(--transition);
+				border: 1px solid rgba(212, 175, 55, 0.1);
+			}
+
+			.stat-card:hover {
+				transform: translateY(-5px);
+				box-shadow: var(--shadow-hover);
+			}
+
+			.stat-number {
+				font-size: 2.5rem;
+				font-weight: 600;
+				color: var(--accent-color);
+				margin-bottom: 10px;
+			}
+
+			.stat-label {
+				color: var(--text-secondary);
+				font-size: 1.1rem;
+			}
+
+			/* Section Cards */
+			.section-card {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				padding: 40px;
+				border-radius: 20px;
+				box-shadow: var(--shadow);
+				margin-bottom: 40px;
+				border: 1px solid rgba(212, 175, 55, 0.1);
+			}
+
+			.section-card h3 {
+				font-family: "Playfair Display", serif;
+				margin-bottom: 30px;
+				color: var(--text-primary);
+				font-size: 1.8rem;
+				position: relative;
+			}
+
+			.section-card h3::after {
+				content: "";
+				position: absolute;
+				bottom: -10px;
+				left: 0;
+				width: 60px;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--accent-color),
+					var(--accent-dark)
+				);
+			}
+
+			/* File Input */
+			.file-input-wrapper {
+				position: relative;
+				display: block;
+				margin-bottom: 25px;
+			}
+
+			.file-input {
+				position: absolute;
+				opacity: 0;
+				width: 100%;
+				height: 100%;
+				cursor: pointer;
+			}
+
+			.file-input-label {
+				display: block;
+				padding: 30px;
+				background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+				border: 2px dashed #ddd;
+				border-radius: 15px;
+				cursor: pointer;
+				transition: var(--transition);
+				text-align: center;
+				font-size: 16px;
+				color: var(--text-secondary);
+			}
+
+			.file-input-label:hover {
+				background: linear-gradient(135deg, #e9ecef, #dee2e6);
+				border-color: var(--accent-color);
+				color: var(--accent-color);
+			}
+
+			.preview-image {
+				max-width: 250px;
+				max-height: 250px;
+				margin: 20px auto 0;
+				border-radius: 15px;
+				box-shadow: var(--shadow);
+				display: block;
+			}
+
+			/* Category Management */
+			.category-item {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 15px 20px;
+				background: rgba(255, 255, 255, 0.8);
+				border-radius: 10px;
+				margin-bottom: 10px;
+				border: 1px solid #eee;
+				transition: var(--transition);
+			}
+
+			.category-item:hover {
+				transform: translateX(5px);
+				box-shadow: var(--shadow);
+			}
+
+			.category-info {
+				display: flex;
+				align-items: center;
+				gap: 15px;
+			}
+
+			.category-color {
+				width: 20px;
+				height: 20px;
+				border-radius: 50%;
+				border: 2px solid #fff;
+			}
+
+			.category-actions {
+				display: flex;
+				gap: 10px;
+			}
+
+			.btn-small {
+				padding: 8px 16px;
+				font-size: 12px;
+				border-radius: 20px;
+			}
+
+			/* Filter Controls */
+			.filter-controls {
+				display: flex;
+				gap: 20px;
+				margin-bottom: 30px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+
+			/* Images Grid */
+			.images-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+				gap: 25px;
+			}
+
+			.image-card {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				border-radius: 15px;
+				overflow: hidden;
+				transition: var(--transition);
+				box-shadow: var(--shadow);
+				border: 1px solid rgba(212, 175, 55, 0.1);
+			}
+
+			.image-card:hover {
+				transform: translateY(-5px);
+				box-shadow: var(--shadow-hover);
+			}
+
+			.image-card img {
+				width: 100%;
+				height: 220px;
+				object-fit: cover;
+			}
+
+			.image-info {
+				padding: 20px;
+			}
+
+			.image-title {
+				font-weight: 600;
+				margin-bottom: 8px;
+				color: var(--text-primary);
+			}
+
+			.image-category {
+				color: var(--accent-color);
+				font-size: 12px;
+				text-transform: uppercase;
+				font-weight: 500;
+				margin-bottom: 12px;
+			}
+
+			.image-description {
+				color: var(--text-secondary);
+				font-size: 14px;
+				margin-bottom: 20px;
+				line-height: 1.5;
+			}
+
+			.image-actions {
+				display: flex;
+				gap: 10px;
+			}
+
+			/* Alerts */
+			.alert {
+				padding: 20px;
+				margin-bottom: 25px;
+				border-radius: 10px;
+				font-weight: 500;
+				border: none;
+			}
+
+			.alert-success {
+				background: linear-gradient(135deg, #d4edda, #c3e6cb);
+				color: #155724;
+			}
+
+			.alert-error {
+				background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+				color: #721c24;
+			}
+
+			/* Modal */
+			.modal {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.8);
+				z-index: 2000;
+				backdrop-filter: blur(10px);
+			}
+
+			.modal.active {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.modal-content {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(20px);
+				padding: 40px;
+				border-radius: 20px;
+				max-width: 600px;
+				width: 90%;
+				max-height: 80vh;
+				overflow-y: auto;
+				box-shadow: var(--shadow-hover);
+			}
+
+			.modal-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 30px;
+			}
+
+			.modal-header h3 {
+				font-family: "Playfair Display", serif;
+				color: var(--text-primary);
+			}
+
+			.modal-close {
+				background: none;
+				border: none;
+				font-size: 28px;
+				cursor: pointer;
+				color: var(--text-secondary);
+				transition: var(--transition);
+			}
+
+			.modal-close:hover {
+				color: var(--accent-color);
+				transform: scale(1.1);
+			}
+
+			/* Loading */
+			.loading {
+				display: none;
+				text-align: center;
+				padding: 40px;
+				color: var(--text-secondary);
+			}
+
+			.loading.active {
+				display: block;
+			}
+
+			.loading::after {
+				content: "";
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				border: 2px solid var(--accent-color);
+				border-radius: 50%;
+				border-top-color: transparent;
+				animation: spin 1s linear infinite;
+				margin-left: 10px;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				.header {
+					flex-direction: column;
+					gap: 20px;
+					text-align: center;
+				}
+
+				.header h1 {
+					font-size: 2rem;
+				}
+
+				.filter-controls {
+					flex-direction: column;
+					align-items: stretch;
+				}
+
+				.images-grid {
+					grid-template-columns: 1fr;
+				}
+
+				.stats {
+					grid-template-columns: 1fr;
+				}
+
+				.login-form {
+					margin: 50px auto;
+					padding: 30px;
+				}
+			}
+
+			.current-user {
+				color: var(--text-secondary);
+				font-size: 0.9rem;
+				padding: 8px 12px;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 20px;
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(212, 175, 55, 0.2);
+			}
+
+			.password-strength {
+				font-size: 0.9rem;
+			}
+
+			.strength-bar {
+				width: 100%;
+				height: 8px;
+				background: #eee;
+				border-radius: 4px;
+				overflow: hidden;
+				margin-bottom: 15px;
+			}
+
+			.strength-fill {
+				height: 100%;
+				transition: all 0.3s ease;
+				border-radius: 4px;
+				width: 0%;
+			}
+
+			.password-requirements {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 8px;
+			}
+
+			.password-requirements li {
+				padding: 8px 12px;
+				position: relative;
+				padding-left: 35px;
+				transition: all 0.3s ease;
+				color: #999;
+				background: rgba(255, 255, 255, 0.5);
+				border-radius: 8px;
+				font-size: 0.9rem;
+			}
+
+			.password-requirements li::before {
+				content: "✗";
+				position: absolute;
+				left: 12px;
+				top: 8px;
+				color: #dc3545;
+				font-weight: bold;
+				transition: all 0.3s ease;
+			}
+
+			.password-requirements li.valid {
+				color: #28a745;
+				background: rgba(40, 167, 69, 0.1);
+			}
+
+			.password-requirements li.valid::before {
+				content: "✓";
+				color: #28a745;
+			}
+
+			/* Mobile optimizations */
+			@media (max-width: 768px) {
+				.header {
+					flex-direction: column;
+					gap: 15px;
+					text-align: center;
+					padding: 20px;
+				}
+
+				.header h1 {
+					font-size: 2rem;
+					margin-bottom: 10px;
+				}
+
+				.header-actions {
+					flex-direction: column;
+					gap: 10px;
+					width: 100%;
+				}
+
+				.header-actions > * {
+					width: 100%;
+					text-align: center;
+				}
+
+				.current-user {
+					order: -1;
+					font-size: 0.8rem;
+					padding: 6px 10px;
+				}
+
+				.account-modal-content {
+					margin: 10px;
+					width: calc(100% - 20px);
+					max-height: 95vh;
+					padding: 20px;
+				}
+
+				.modal-header h3 {
+					font-size: 1.5rem;
+				}
+
+				.account-section h4 {
+					font-size: 1.2rem;
+				}
+
+				.form-group input,
+				.form-group textarea,
+				.form-group select {
+					font-size: 16px; /* Prevents zoom on iOS */
+					padding: 12px;
+				}
+
+				.btn {
+					padding: 12px 20px;
+					font-size: 16px;
+					width: 100%;
+					margin-top: 10px;
+				}
+
+				.password-requirements {
+					grid-template-columns: 1fr;
+				}
+
+				.password-requirements li {
+					font-size: 0.85rem;
+					padding: 6px 10px;
+					padding-left: 30px;
+				}
+
+				.strength-bar {
+					height: 10px;
+				}
+			}
+
+			@media (max-width: 480px) {
+				.container {
+					padding: 10px;
+				}
+
+				.account-modal-content {
+					margin: 5px;
+					width: calc(100% - 10px);
+					padding: 15px;
+				}
+
+				.header {
+					padding: 15px;
+				}
+
+				.header h1 {
+					font-size: 1.8rem;
+				}
+			}
+
+			/* Touch-friendly buttons */
+			@media (hover: none) and (pointer: coarse) {
+				.btn,
+				.nav-link,
+				.filter-btn {
+					min-height: 44px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				.modal-close {
+					min-width: 44px;
+					min-height: 44px;
+				}
+			}
+
+			.account-modal-content {
+				max-width: 600px;
+				max-height: 90vh;
+				overflow-y: auto;
+			}
+
+			.account-section {
+				margin-bottom: 30px;
+			}
+
+			.account-section h4 {
+				color: var(--accent-color);
+				margin-bottom: 20px;
+				font-size: 1.3rem;
+				font-family: "Playfair Display", serif;
+			}
+
+			.account-divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					#ddd,
+					transparent
+				);
+				margin: 30px 0;
+			}
+
+			.form-help {
+				color: var(--text-secondary);
+				font-size: 0.85rem;
+				margin-top: 5px;
+				display: block;
+			}
+		</style>
+	</head>
+	<body>
+		<!-- Background Animation -->
+		<div class="bg-animation">
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+			<div class="floating-element"></div>
+		</div>
+
+		<!-- Login Form -->
+		<div id="loginForm" class="login-form">
+			<h2>Panel Administracyjny</h2>
+			<div id="alertContainer"></div>
+			<form id="loginFormElement">
+				<div class="form-group">
+					<label for="username">Nazwa użytkownika:</label>
+					<input type="text" id="username" name="username" required />
+				</div>
+				<div class="form-group">
+					<label for="password">Hasło:</label>
+					<input
+						type="password"
+						id="password"
+						name="password"
+						required
+					/>
+				</div>
+				<button type="submit" class="btn" style="width: 100%">
+					Zaloguj się
+				</button>
+			</form>
+		</div>
+
+		<!-- Dashboard -->
+		<div id="dashboard" class="dashboard">
+			<div class="container">
+				<!-- Header -->
+				<div class="header">
+					<h1>Panel Administracyjny</h1>
+					<div class="header-actions">
+						<span id="currentUser" class="current-user"></span>
+						<a href="/" class="view-site-btn" target="_blank"
+							>Zobacz stronę</a
+						>
+						<button
+							id="accountSettingsBtn"
+							class="btn btn-secondary"
+						>
+							Ustawienia konta
+						</button>
+						<button id="logoutBtn" class="logout-btn">
+							Wyloguj się
+						</button>
+					</div>
+				</div>
+
+				<div id="alertContainer2"></div>
+
+				<!-- Statistics -->
+				<div class="stats" id="statsContainer">
+					<!-- Stats will be loaded here -->
+				</div>
+
+				<!-- Category Management -->
+				<div class="section-card">
+					<h3>Zarządzaj kategoriami</h3>
+					<div id="categoriesContainer">
+						<!-- Categories will be loaded here -->
+					</div>
+					<div style="margin-top: 20px">
+						<button class="btn" onclick="openCategoryModal()">
+							Dodaj kategorię
+						</button>
+					</div>
+				</div>
+
+				<!-- Upload Section -->
+				<div class="section-card">
+					<h3>Dodaj nowe zdjęcie</h3>
+					<form id="uploadForm" enctype="multipart/form-data">
+						<div class="file-input-wrapper">
+							<input
+								type="file"
+								id="imageFile"
+								name="image"
+								accept="image/*"
+								class="file-input"
+								required
+							/>
+							<label for="imageFile" class="file-input-label">
+								📷 Wybierz zdjęcie lub przeciągnij tutaj<br />
+								<small
+									>Obsługiwane formaty: JPEG, PNG, WebP (maks.
+									10MB)</small
+								>
+							</label>
+						</div>
+						<img
+							id="previewImage"
+							class="preview-image"
+							style="display: none"
+							alt="Podgląd"
+						/>
+
+						<div class="form-group">
+							<label for="title">Tytuł:</label>
+							<input
+								type="text"
+								id="title"
+								name="title"
+								required
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="description">Opis:</label>
+							<textarea
+								id="description"
+								name="description"
+								rows="3"
+								placeholder="Opcjonalny opis zdjęcia..."
+							></textarea>
+						</div>
+
+						<div class="form-group">
+							<label for="category">Kategoria:</label>
+							<select id="category" name="category" required>
+								<option value="">Wybierz kategorię</option>
+								<!-- Categories will be loaded dynamically -->
+							</select>
+						</div>
+
+						<button type="submit" class="btn">Dodaj zdjęcie</button>
+					</form>
+				</div>
+
+				<!-- Images Section -->
+				<div class="section-card">
+					<h3>Zarządzaj zdjęciami</h3>
+
+					<div class="filter-controls">
+						<select id="categoryFilter">
+							<option value="all">Wszystkie kategorie</option>
+							<!-- Categories will be loaded dynamically -->
+						</select>
+						<button id="refreshBtn" class="btn btn-secondary">
+							Odśwież
+						</button>
+					</div>
+
+					<div class="loading" id="loading">Ładowanie zdjęć...</div>
+					<div class="images-grid" id="imagesGrid">
+						<!-- Images will be loaded here -->
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Edit Image Modal -->
+		<div id="editModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Edytuj zdjęcie</h3>
+					<button class="modal-close" onclick="closeEditModal()">
+						&times;
+					</button>
+				</div>
+				<form id="editForm">
+					<input type="hidden" id="editImageId" />
+					<div class="form-group">
+						<label for="editTitle">Tytuł:</label>
+						<input type="text" id="editTitle" required />
+					</div>
+					<div class="form-group">
+						<label for="editDescription">Opis:</label>
+						<textarea id="editDescription" rows="3"></textarea>
+					</div>
+					<div class="form-group">
+						<label for="editCategory">Kategoria:</label>
+						<select id="editCategory" required>
+							<!-- Categories will be loaded dynamically -->
+						</select>
+					</div>
+					<div style="display: flex; gap: 15px">
+						<button type="submit" class="btn">Zapisz zmiany</button>
+						<button
+							type="button"
+							class="btn btn-secondary"
+							onclick="closeEditModal()"
+						>
+							Anuluj
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Category Modal -->
+		<div id="categoryModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 id="categoryModalTitle">Dodaj kategorię</h3>
+					<button class="modal-close" onclick="closeCategoryModal()">
+						&times;
+					</button>
+				</div>
+				<form id="categoryForm">
+					<input type="hidden" id="categoryId" />
+					<div class="form-group">
+						<label for="categoryName">Nazwa kategorii:</label>
+						<input
+							type="text"
+							id="categoryName"
+							required
+							placeholder="np. Portrety"
+						/>
+					</div>
+					<div style="display: flex; gap: 15px">
+						<button type="submit" class="btn">Zapisz</button>
+						<button
+							type="button"
+							class="btn btn-secondary"
+							onclick="closeCategoryModal()"
+						>
+							Anuluj
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Change Password Modal -->
+		<div id="passwordModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Zmień hasło</h3>
+					<button class="modal-close" onclick="closePasswordModal()">
+						&times;
+					</button>
+				</div>
+				<form id="passwordForm">
+					<div class="form-group">
+						<label for="currentPassword">Obecne hasło:</label>
+						<input type="password" id="currentPassword" required />
+					</div>
+					<div class="form-group">
+						<label for="newPassword">Nowe hasło:</label>
+						<input
+							type="password"
+							id="newPassword"
+							required
+							minlength="8"
+						/>
+						<div id="passwordStrength" class="password-strength">
+							<div class="strength-bar">
+								<div class="strength-fill"></div>
+							</div>
+							<ul class="password-requirements">
+								<li id="req-length">Co najmniej 8 znaków</li>
+								<li id="req-upper">Wielka litera</li>
+								<li id="req-lower">Mała litera</li>
+								<li id="req-number">Cyfra</li>
+								<li id="req-special">
+									Znak specjalny (!@#$%^&*)
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="confirmPassword"
+							>Potwierdź nowe hasło:</label
+						>
+						<input
+							type="password"
+							id="confirmPassword"
+							required
+							minlength="8"
+						/>
+					</div>
+					<button type="submit" class="btn">Zmień hasło</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- Account Settings Modal -->
+		<div id="accountModal" class="modal">
+			<div class="modal-content account-modal-content">
+				<div class="modal-header">
+					<h3>Ustawienia konta</h3>
+					<button class="modal-close" onclick="closeAccountModal()">
+						&times;
+					</button>
+				</div>
+
+				<div id="accountAlerts"></div>
+
+				<!-- Change Username Section -->
+				<div class="account-section">
+					<h4>Zmień login</h4>
+					<form id="usernameForm">
+						<div class="form-group">
+							<label for="currentPasswordUsername"
+								>Obecne hasło:</label
+							>
+							<input
+								type="password"
+								id="currentPasswordUsername"
+								required
+							/>
+						</div>
+						<div class="form-group">
+							<label for="newUsername">Nowy login:</label>
+							<input
+								type="text"
+								id="newUsername"
+								required
+								minlength="3"
+								pattern="[a-zA-Z0-9_-]+"
+								title="Login może zawierać tylko litery, cyfry, _ i -"
+							/>
+							<small class="form-help"
+								>Minimum 3 znaki, tylko litery, cyfry, _ i
+								-</small
+							>
+						</div>
+						<button type="submit" class="btn">Zmień login</button>
+					</form>
+				</div>
+
+				<div class="account-divider"></div>
+
+				<!-- Change Password Section -->
+				<div class="account-section">
+					<h4>Zmień hasło</h4>
+					<form id="passwordForm">
+						<div class="form-group">
+							<label for="currentPassword">Obecne hasło:</label>
+							<input
+								type="password"
+								id="currentPassword"
+								required
+							/>
+						</div>
+						<div class="form-group">
+							<label for="newPassword">Nowe hasło:</label>
+							<input
+								type="password"
+								id="newPassword"
+								required
+								minlength="8"
+							/>
+							<div
+								id="passwordStrength"
+								class="password-strength"
+							>
+								<div class="strength-bar">
+									<div class="strength-fill"></div>
+								</div>
+								<ul class="password-requirements">
+									<li id="req-length">
+										Co najmniej 8 znaków
+									</li>
+									<li id="req-upper">Wielka litera</li>
+									<li id="req-lower">Mała litera</li>
+									<li id="req-number">Cyfra</li>
+									<li id="req-special">
+										Znak specjalny (!@#$%^&*)
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="confirmPassword"
+								>Potwierdź nowe hasło:</label
+							>
+							<input
+								type="password"
+								id="confirmPassword"
+								required
+								minlength="8"
+							/>
+						</div>
+						<button type="submit" class="btn">Zmień hasło</button>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			console.log("Starting admin panel script...");
+
+			let currentImages = [];
+			let categories = [
+				{ key: "Portrety", name: "Portrety" },
+				{ key: "Krajobrazy", name: "Krajobrazy" },
+				{ key: "Wydarzenia", name: "Wydarzenia" },
+			];
+			let currentUsername = "";
+
+			// Initialize when DOM is ready
+			document.addEventListener("DOMContentLoaded", function () {
+				console.log("DOM loaded, initializing...");
+				checkAuth();
+				initializeEventListeners();
+			});
+
+			function initializeEventListeners() {
+				console.log("Initializing event listeners...");
+
+				// Account settings button
+				const accountBtn =
+					document.getElementById("accountSettingsBtn");
+				if (accountBtn) {
+					accountBtn.addEventListener("click", function (e) {
+						e.preventDefault();
+						console.log("Account settings clicked");
+						if (currentUsername) {
+							document.getElementById("newUsername").value =
+								currentUsername;
+						}
+						document
+							.getElementById("accountModal")
+							.classList.add("active");
+						document.getElementById("accountAlerts").innerHTML = "";
+					});
+					console.log("Account button listener added");
+				}
+
+				// Logout
+				document
+					.getElementById("logoutBtn")
+					.addEventListener("click", async function () {
+						try {
+							await fetch("/api/logout", { method: "POST" });
+							showLogin();
+							showAlert("Wylogowano pomyślnie!", "success");
+						} catch (error) {
+							showAlert("Błąd podczas wylogowywania", "error");
+						}
+					});
+
+				// Change password button
+				document
+					.getElementById("changePasswordBtn")
+					.addEventListener("click", function () {
+						document
+							.getElementById("passwordModal")
+							.classList.add("active");
+					});
+
+				// Close modals when clicking outside
+				document.querySelectorAll(".modal").forEach((modal) => {
+					modal.addEventListener("click", function (e) {
+						if (e.target === this) {
+							const modalId = this.getAttribute("id");
+							if (modalId === "editModal") {
+								closeEditModal();
+							} else if (modalId === "categoryModal") {
+								closeCategoryModal();
+							} else if (modalId === "passwordModal") {
+								closePasswordModal();
+							} else if (modalId === "accountModal") {
+								closeAccountModal();
+							}
+						}
+					});
+				});
+			}
+
+			async function checkAuth() {
+				try {
+					const response = await fetch("/api/auth/check");
+					const data = await response.json();
+
+					if (data.authenticated) {
+						showDashboard();
+					} else {
+						showLogin();
+					}
+				} catch (error) {
+					showLogin();
+				}
+			}
+
+			function showLogin() {
+				document.getElementById("loginForm").style.display = "block";
+				document.getElementById("dashboard").classList.remove("active");
+			}
+
+			function showDashboard() {
+				document.getElementById("loginForm").style.display = "none";
+				document.getElementById("dashboard").classList.add("active");
+				loadCategoriesIntoSelects();
+				loadCategoriesDisplay();
+				loadStats();
+				loadImages();
+				loadUserInfo();
+			}
+
+			// Load current user info
+			async function loadUserInfo() {
+				try {
+					const response = await fetch("/api/user");
+					if (response.ok) {
+						const user = await response.json();
+						currentUsername = user.username;
+						document.getElementById("currentUser").textContent =
+							user.username;
+					}
+				} catch (error) {
+					console.error("Error loading user info:", error);
+				}
+			}
+
+			function closeAccountModal() {
+				document
+					.getElementById("accountModal")
+					.classList.remove("active");
+				document.getElementById("usernameForm").reset();
+				document.getElementById("passwordForm").reset();
+				document.getElementById("accountAlerts").innerHTML = "";
+				resetPasswordStrength();
+			}
+
+			function resetPasswordStrength() {
+				const strengthFill = document.querySelector(".strength-fill");
+				if (strengthFill) {
+					strengthFill.style.width = "0%";
+				}
+				document
+					.querySelectorAll(".password-requirements li")
+					.forEach((li) => {
+						li.className = "";
+					});
+			}
+
+			// Login
+			document
+				.getElementById("loginFormElement")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
+
+					const formData = new FormData(e.target);
+					const data = {
+						username: formData.get("username"),
+						password: formData.get("password"),
+					};
+
+					try {
+						const response = await fetch("/api/login", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(data),
+						});
+
+						const result = await response.json();
+
+						if (result.success) {
+							showAlert("Zalogowano pomyślnie!", "success");
+							setTimeout(() => showDashboard(), 1000);
+						} else {
+							showAlert(
+								result.error || "Błąd logowania",
+								"error"
+							);
+						}
+					} catch (error) {
+						showAlert("Błąd połączenia", "error");
+					}
+				});
+
+			// Password form submit
+			document
+				.getElementById("passwordForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
+
+					const currentPassword =
+						document.getElementById("currentPassword").value;
+					const newPassword =
+						document.getElementById("newPassword").value;
+					const confirmPassword =
+						document.getElementById("confirmPassword").value;
+
+					if (newPassword !== confirmPassword) {
+						showAlert(
+							"Nowe hasła nie są identyczne!",
+							"error",
+							"alertContainer2"
+						);
+						return;
+					}
+
+					if (newPassword.length < 6) {
+						showAlert(
+							"Nowe hasło musi mieć co najmniej 6 znaków!",
+							"error",
+							"alertContainer2"
+						);
+						return;
+					}
+
+					try {
+						const response = await fetch("/api/change-password", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								currentPassword: currentPassword,
+								newPassword: newPassword,
+							}),
+						});
+
+						const result = await response.json();
+
+						if (result.success) {
+							showAlert(
+								"Hasło zostało zmienione pomyślnie!",
+								"success",
+								"alertContainer2"
+							);
+							closePasswordModal();
+						} else {
+							showAlert(
+								result.error || "Błąd podczas zmiany hasła",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
+						showAlert(
+							"Błąd połączenia",
+							"error",
+							"alertContainer2"
+						);
+					}
+				});
+
+			// Load categories into selects
+			function loadCategoriesIntoSelects() {
+				const selects = ["category", "editCategory", "categoryFilter"];
+
+				selects.forEach((selectId) => {
+					const select = document.getElementById(selectId);
+					if (!select) return;
+
+					// Keep the first option (like "Wybierz kategorię")
+					const firstOption = select.options[0];
+					select.innerHTML = "";
+					if (firstOption && selectId !== "editCategory") {
+						select.appendChild(firstOption);
+					}
+
+					categories.forEach((cat) => {
+						const option = document.createElement("option");
+						option.value = cat.key;
+						option.textContent = cat.name;
+						select.appendChild(option);
+					});
+				});
+			}
+
+			// Load categories display
+			function loadCategoriesDisplay() {
+				const container = document.getElementById(
+					"categoriesContainer"
+				);
+				container.innerHTML = categories
+					.map(
+						(cat) => `
+                <div class="category-item">
+                    <div class="category-info">
+                        <div class="category-color" style="background: ${getCategoryColor(
+							cat.key
+						)}"></div>
+                        <span><strong>${cat.name}</strong></span>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn btn-small" onclick="editCategory('${
+							cat.key
+						}', '${cat.name}')">Edytuj</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteCategory('${
+							cat.key
+						}')">Usuń</button>
+                    </div>
+                </div>
+            `
+					)
+					.join("");
+			}
+
+			function getCategoryColor(key) {
+				const colors = {
+					Portrety: "#ff6b6b",
+					Krajobrazy: "#4ecdc4",
+					Wydarzenia: "#45b7d1",
+					Ślub: "#f39c12",
+					Ulica: "#9b59b6",
+					Natura: "#27ae60",
+				};
+				return colors[key] || "#6c757d";
+			}
+
+			// Category management functions
+			window.openCategoryModal = function (key = "", name = "") {
+				document.getElementById("categoryModalTitle").textContent = key
+					? "Edytuj kategorię"
+					: "Dodaj kategorię";
+				document.getElementById("categoryId").value = key;
+				document.getElementById("categoryName").value = name;
+				document
+					.getElementById("categoryModal")
+					.classList.add("active");
+			};
+
+			window.closeCategoryModal = function () {
+				document
+					.getElementById("categoryModal")
+					.classList.remove("active");
+				document.getElementById("categoryForm").reset();
+			};
+
+			window.closeEditModal = function () {
+				document.getElementById("editModal").classList.remove("active");
+			};
+
+			window.closeAccountModal = closeAccountModal;
+
+			window.editImage = function (id) {
+				const image = currentImages.find((img) => img.id === id);
+				if (!image) return;
+
+				document.getElementById("editImageId").value = id;
+				document.getElementById("editTitle").value = image.title;
+				document.getElementById("editDescription").value =
+					image.description || "";
+				document.getElementById("editCategory").value = image.category;
+
+				document.getElementById("editModal").classList.add("active");
+			};
+
+			window.deleteImage = async function (id) {
+				if (
+					!confirm(
+						"Czy na pewno chcesz usunąć to zdjęcie? Ta operacja jest nieodwracalna."
+					)
+				) {
+					return;
+				}
+
+				try {
+					const response = await fetch(`/api/images/${id}`, {
+						method: "DELETE",
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						showAlert(
+							"Zdjęcie zostało usunięte!",
+							"success",
+							"alertContainer2"
+						);
+						loadImages(
+							document.getElementById("categoryFilter").value
+						);
+						loadStats();
+					} else {
+						showAlert(
+							result.error || "Błąd podczas usuwania",
+							"error",
+							"alertContainer2"
+						);
+					}
+				} catch (error) {
+					showAlert("Błąd połączenia", "error", "alertContainer2");
+				}
+			};
+
+			// Category form submit
+			document
+				.getElementById("categoryForm")
+				.addEventListener("submit", function (e) {
+					e.preventDefault();
+
+					const name = document
+						.getElementById("categoryName")
+						.value.trim();
+					const existingKey =
+						document.getElementById("categoryId").value;
+
+					if (!name) {
+						showAlert(
+							"Nazwa kategorii jest wymagana!",
+							"error",
+							"alertContainer2"
+						);
+						return;
+					}
+
+					// Check if name already exists (for new categories)
+					if (
+						!existingKey &&
+						categories.find((cat) => cat.name === name)
+					) {
+						showAlert(
+							"Kategoria o tej nazwie już istnieje!",
+							"error",
+							"alertContainer2"
+						);
+						return;
+					}
+
+					if (existingKey) {
+						// Edit existing category
+						const index = categories.findIndex(
+							(cat) => cat.key === existingKey
+						);
+						if (index !== -1) {
+							categories[index].name = name;
+							categories[index].key = name;
+						}
+					} else {
+						// Add new category
+						categories.push({ key: name, name: name });
+					}
+
+					loadCategoriesDisplay();
+					loadCategoriesIntoSelects();
+					closeCategoryModal();
+					showAlert(
+						existingKey
+							? "Kategoria została zaktualizowana!"
+							: "Kategoria została dodana!",
+						"success",
+						"alertContainer2"
+					);
+				});
+
+			// Load statistics
+			async function loadStats() {
+				try {
+					const response = await fetch("/api/stats");
+					const stats = await response.json();
+
+					const statsContainer =
+						document.getElementById("statsContainer");
+					statsContainer.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.totalImages}</div>
+                        <div class="stat-label">Wszystkich zdjęć</div>
+                    </div>
+                    ${stats.byCategory
+						.map(
+							(cat) => `
+                        <div class="stat-card">
+                            <div class="stat-number">${cat.count}</div>
+                            <div class="stat-label">${getCategoryName(
+								cat.category
+							)}</div>
+                        </div>
+                    `
+						)
+						.join("")}
+                `;
+				} catch (error) {
+					console.error("Error loading stats:", error);
+				}
+			}
+
+			// Load images
+			async function loadImages(category = "all") {
+				const loading = document.getElementById("loading");
+				const grid = document.getElementById("imagesGrid");
+
+				loading.classList.add("active");
+				grid.innerHTML = "";
+
+				try {
+					const url =
+						category === "all"
+							? "/api/images"
+							: `/api/images?category=${category}`;
+					const response = await fetch(url);
+					const images = await response.json();
+
+					currentImages = images;
+					displayImages(images);
+				} catch (error) {
+					showAlert(
+						"Błąd podczas ładowania zdjęć",
+						"error",
+						"alertContainer2"
+					);
+				} finally {
+					loading.classList.remove("active");
+				}
+			}
+
+			function displayImages(images) {
+				const grid = document.getElementById("imagesGrid");
+
+				if (images.length === 0) {
+					grid.innerHTML =
+						'<p style="text-align: center; color: #666; grid-column: 1/-1;">Brak zdjęć w tej kategorii</p>';
+					return;
+				}
+
+				grid.innerHTML = images
+					.map(
+						(image) => `
+                <div class="image-card">
+                    <img src="${image.src}" alt="${image.title}" loading="lazy">
+                    <div class="image-info">
+                        <div class="image-title">${image.title}</div>
+                        <div class="image-category">${getCategoryName(
+							image.category
+						)}</div>
+                        <div class="image-description">${
+							image.description || ""
+						}</div>
+                        <div class="image-actions">
+                            <button class="btn" onclick="editImage(${
+								image.id
+							})">Edytuj</button>
+                            <button class="btn btn-danger" onclick="deleteImage(${
+								image.id
+							})">Usuń</button>
+                        </div>
+                    </div>
+                </div>
+            `
+					)
+					.join("");
+			}
+
+			// Upload image
+			document
+				.getElementById("uploadForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
+
+					const formData = new FormData(e.target);
+
+					try {
+						const response = await fetch("/api/images/upload", {
+							method: "POST",
+							body: formData,
+						});
+
+						const result = await response.json();
+
+						if (result.success) {
+							showAlert(
+								"Zdjęcie zostało dodane pomyślnie!",
+								"success",
+								"alertContainer2"
+							);
+							e.target.reset();
+							document.getElementById(
+								"previewImage"
+							).style.display = "none";
+							loadImages();
+							loadStats();
+						} else {
+							showAlert(
+								result.error ||
+									"Błąd podczas dodawania zdjęcia",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
+						showAlert(
+							"Błąd połączenia",
+							"error",
+							"alertContainer2"
+						);
+					}
+				});
+
+			// File preview
+			document
+				.getElementById("imageFile")
+				.addEventListener("change", function (e) {
+					const file = e.target.files[0];
+					const preview = document.getElementById("previewImage");
+
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = function (e) {
+							preview.src = e.target.result;
+							preview.style.display = "block";
+						};
+						reader.readAsDataURL(file);
+					} else {
+						preview.style.display = "none";
+					}
+				});
+
+			// Category filter
+			document
+				.getElementById("categoryFilter")
+				.addEventListener("change", function (e) {
+					loadImages(e.target.value);
+				});
+
+			// Refresh button
+			document
+				.getElementById("refreshBtn")
+				.addEventListener("click", function () {
+					const category =
+						document.getElementById("categoryFilter").value;
+					loadImages(category);
+					loadStats();
+				});
+
+			// Edit image
+			function editImage(id) {
+				const image = currentImages.find((img) => img.id === id);
+				if (!image) return;
+
+				document.getElementById("editImageId").value = id;
+				document.getElementById("editTitle").value = image.title;
+				document.getElementById("editDescription").value =
+					image.description || "";
+				document.getElementById("editCategory").value = image.category;
+
+				document.getElementById("editModal").classList.add("active");
+			}
+
+			function closeEditModal() {
+				document.getElementById("editModal").classList.remove("active");
+			}
+
+			// Edit form submit
+			document
+				.getElementById("editForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
+
+					const id = document.getElementById("editImageId").value;
+					const data = {
+						title: document.getElementById("editTitle").value,
+						description:
+							document.getElementById("editDescription").value,
+						category: document.getElementById("editCategory").value,
+					};
+
+					try {
+						const response = await fetch(`/api/images/${id}`, {
+							method: "PUT",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(data),
+						});
+
+						const result = await response.json();
+
+						if (result.success) {
+							showAlert(
+								"Zdjęcie zostało zaktualizowane!",
+								"success",
+								"alertContainer2"
+							);
+							closeEditModal();
+							loadImages(
+								document.getElementById("categoryFilter").value
+							);
+						} else {
+							showAlert(
+								result.error || "Błąd podczas aktualizacji",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
+						showAlert(
+							"Błąd połączenia",
+							"error",
+							"alertContainer2"
+						);
+					}
+				});
+
+			// Delete image
+			async function deleteImage(id) {
+				if (
+					!confirm(
+						"Czy na pewno chcesz usunąć to zdjęcie? Ta operacja jest nieodwracalna."
+					)
+				) {
+					return;
+				}
+
+				try {
+					const response = await fetch(`/api/images/${id}`, {
+						method: "DELETE",
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						showAlert(
+							"Zdjęcie zostało usunięte!",
+							"success",
+							"alertContainer2"
+						);
+						loadImages(
+							document.getElementById("categoryFilter").value
+						);
+						loadStats();
+					} else {
+						showAlert(
+							result.error || "Błąd podczas usuwania",
+							"error",
+							"alertContainer2"
+						);
+					}
+				} catch (error) {
+					showAlert("Błąd połączenia", "error", "alertContainer2");
+				}
+			}
+
+			// Utility functions
+			function getCategoryName(category) {
+				const cat = categories.find((c) => c.key === category);
+				return cat ? cat.name : category;
+			}
+
+			function showAlert(message, type, containerId = "alertContainer") {
+				const container = document.getElementById(containerId);
+				const alert = document.createElement("div");
+				alert.className = `alert alert-${type}`;
+				alert.textContent = message;
+
+				container.innerHTML = "";
+				container.appendChild(alert);
+
+				setTimeout(() => {
+					alert.remove();
+				}, 5000);
+			}
+
+			console.log("Script loaded successfully");
+		</script>
+	</body>
+</html>
