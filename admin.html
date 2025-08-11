@@ -632,6 +632,16 @@
 			.password-strength {
 				font-size: 0.9rem;
 			}
+			.password-match-error {
+				color: #dc3545;
+				font-size: 0.9rem;
+				background: rgba(220, 53, 69, 0.1);
+				padding: 8px 12px;
+				border-radius: 6px;
+				border: 1px solid rgba(220, 53, 69, 0.2);
+				display: none;
+				margin-top: 10px;
+			}
 
 			.strength-bar {
 				width: 100%;
@@ -1101,11 +1111,7 @@
 						/>
 					</div>
 					<!-- Error message just above the button, inside the form -->
-					<div
-						id="passwordMatchError"
-						class="password-match-error"
-						style="margin-bottom: 10px"
-					></div>
+					<div id="passwordMatchError" class="password-match-error" style="margin-bottom: 10px; display: none;"></div>
 					<button type="submit" class="btn">Zmień hasło</button>
 				</form>
 			</div>
@@ -1422,115 +1428,29 @@
 					}
 				});
 
+
 			// Username form submit in account modal
 			document.addEventListener("DOMContentLoaded", function () {
-				const usernameForm = document.getElementById("usernameForm");
-				if (usernameForm) {
-					usernameForm.addEventListener("submit", async function (e) {
-						e.preventDefault();
-
-						const currentPassword = document.getElementById(
-							"currentPasswordUsername"
-						).value;
-						const newUsername =
-							document.getElementById("newUsername").value;
-
-						if (!currentPassword || !newUsername) {
-							showAlert(
-								"Wszystkie pola są wymagane!",
-								"error",
-								"accountAlerts"
-							);
-							return;
-						}
-
-						try {
-							const response = await fetch(
-								"/api/change-username",
-								{
-									method: "POST",
-									headers: {
-										"Content-Type": "application/json",
-									},
-									body: JSON.stringify({
-										currentPassword: currentPassword,
-										newUsername: newUsername,
-									}),
-								}
-							);
-
-							const result = await response.json();
-
-							if (result.success) {
-								showAlert(
-									"Login został zmieniony pomyślnie!",
-									"success",
-									"accountAlerts"
-								);
-								currentUsername = result.newUsername;
-								document.getElementById(
-									"currentUser"
-								).textContent = result.newUsername;
-								usernameForm.reset();
-							} else {
-								showAlert(
-									result.error ||
-										"Błąd podczas zmiany loginu",
-									"error",
-									"accountAlerts"
-								);
-							}
-						} catch (error) {
-							showAlert(
-								"Błąd połączenia",
-								"error",
-								"accountAlerts"
-							);
-						}
-					});
-				}
-
-				// Password form submit in account modal (target the specific one)
-				const accountPasswordForm = document.querySelector(
-					"#accountModal #passwordForm"
-				);
-				if (accountPasswordForm) {
-					accountPasswordForm.addEventListener(
-						"submit",
-						async function (e) {
+					const usernameForm = document.getElementById("usernameForm");
+					if (usernameForm) {
+						usernameForm.addEventListener("submit", async function (e) {
 							e.preventDefault();
-
-							const currentPassword = document.querySelector(
-								"#accountModal #currentPassword"
+							const currentPassword = document.getElementById(
+								"currentPasswordUsername"
 							).value;
-							const newPassword = document.querySelector(
-								"#accountModal #newPassword"
-							).value;
-							const confirmPassword = document.querySelector(
-								"#accountModal #confirmPassword"
-							).value;
-
-							if (newPassword !== confirmPassword) {
+							const newUsername =
+								document.getElementById("newUsername").value;
+							if (!currentPassword || !newUsername) {
 								showAlert(
-									"Nowe hasła nie są identyczne!",
+									"Wszystkie pola są wymagane!",
 									"error",
 									"accountAlerts"
 								);
 								return;
 							}
-
-							if (newPassword.length < 8) {
-								showAlert(
-									"Nowe hasło musi mieć co najmniej 8 znaków!",
-									"error",
-									"accountAlerts"
-								);
-								return;
-							}
-
 							try {
 								const response = await fetch(
-									"/api/change-password",
+									"/api/change-username",
 									{
 										method: "POST",
 										headers: {
@@ -1538,25 +1458,26 @@
 										},
 										body: JSON.stringify({
 											currentPassword: currentPassword,
-											newPassword: newPassword,
+											newUsername: newUsername,
 										}),
 									}
 								);
-
 								const result = await response.json();
-
 								if (result.success) {
 									showAlert(
-										"Hasło zostało zmienione pomyślnie!",
+										"Login został zmieniony pomyślnie!",
 										"success",
 										"accountAlerts"
 									);
-									accountPasswordForm.reset();
-									resetPasswordStrength();
+									currentUsername = result.newUsername;
+									document.getElementById(
+										"currentUser"
+									).textContent = result.newUsername;
+									usernameForm.reset();
 								} else {
 									showAlert(
 										result.error ||
-											"Błąd podczas zmiany hasła",
+											"Błąd podczas zmiany loginu",
 										"error",
 										"accountAlerts"
 									);
@@ -1568,21 +1489,103 @@
 									"accountAlerts"
 								);
 							}
-						}
-					);
-				}
+						});
+					}
 
-				// Real-time password strength validation for account modal
-				const accountNewPassword = document.querySelector(
-					"#accountModal #newPassword"
-				);
-				if (accountNewPassword) {
-					accountNewPassword.addEventListener("input", function () {
-						const password = this.value;
-						updatePasswordStrength(password);
-					});
-				}
-			});
+					// Password form submit in account modal (target the specific one)
+					const accountPasswordForm = document.querySelector(
+						"#accountModal #passwordForm"
+					);
+					if (accountPasswordForm) {
+						accountPasswordForm.addEventListener(
+							"submit",
+							async function (e) {
+								e.preventDefault();
+
+								// Add this check right after e.preventDefault():
+								const matchError = document.getElementById("passwordMatchError");
+								if (matchError && matchError.style.display !== "none") {
+									return; // Don't submit if passwords don't match
+								}
+
+								const currentPassword = document.querySelector(
+									"#accountModal #currentPassword"
+								).value;
+								const newPassword = document.querySelector(
+									"#accountModal #newPassword"
+								).value;
+								const confirmPassword = document.querySelector(
+									"#accountModal #confirmPassword"
+								).value;
+								if (newPassword !== confirmPassword) {
+									showAlert(
+										"Nowe hasła nie są identyczne!",
+										"error",
+										"accountAlerts"
+									);
+									return;
+								}
+								if (newPassword.length < 8) {
+									showAlert(
+										"Nowe hasło musi mieć co najmniej 8 znaków!",
+										"error",
+										"accountAlerts"
+									);
+									return;
+								}
+								try {
+									const response = await fetch(
+										"/api/change-password",
+										{
+											method: "POST",
+											headers: {
+												"Content-Type": "application/json",
+											},
+											body: JSON.stringify({
+												currentPassword: currentPassword,
+												newPassword: newPassword,
+											}),
+										}
+									);
+									const result = await response.json();
+									if (result.success) {
+										showAlert(
+											"Hasło zostało zmienione pomyślnie!",
+											"success",
+											"accountAlerts"
+										);
+										accountPasswordForm.reset();
+										resetPasswordStrength();
+									} else {
+										showAlert(
+											result.error ||
+												"Błąd podczas zmiany hasła",
+											"error",
+											"accountAlerts"
+										);
+									}
+								} catch (error) {
+									showAlert(
+										"Błąd połączenia",
+										"error",
+										"accountAlerts"
+									);
+								}
+							}
+						);
+					}
+
+					// Real-time password strength validation for account modal
+					const accountNewPassword = document.querySelector(
+						"#accountModal #newPassword"
+					);
+					if (accountNewPassword) {
+						accountNewPassword.addEventListener("input", function () {
+							const password = this.value;
+							updatePasswordStrength(password);
+						});
+					}
+				});
 
 			// Real-time password strength validation function
 			function updatePasswordStrength(password) {
@@ -2189,45 +2192,39 @@
 			});
 
 			// Real-time password match validation for account modal (compare char by char)
-			document.addEventListener("DOMContentLoaded", function () {
-				const newPasswordInput = document.querySelector(
-					"#accountModal #newPassword"
-				);
-				const confirmPasswordInput = document.querySelector(
-					"#accountModal #confirmPassword"
-				);
-				const matchError =
-					document.getElementById("passwordMatchError");
+document.addEventListener("DOMContentLoaded", function () {
+    const newPasswordInput = document.querySelector(
+        "#accountModal #newPassword"
+    );
+    const confirmPasswordInput = document.querySelector(
+        "#accountModal #confirmPassword"
+    );
+    const matchError = document.getElementById("passwordMatchError");
 
-				function checkPasswordMatch() {
-					const newVal = newPasswordInput.value;
-					const confirmVal = confirmPasswordInput.value;
-					// Show error as soon as any character is different and both fields are non-empty
-					if (
-						newVal.length > 0 &&
-						confirmVal.length > 0 &&
-						newVal !== confirmVal
-					) {
-						matchError.textContent =
-							"Nowe hasła nie są identyczne!";
-						matchError.style.display = "block";
-					} else {
-						matchError.textContent = "";
-						matchError.style.display = "none";
-					}
-				}
+    function checkPasswordMatch() {
+        const newVal = newPasswordInput ? newPasswordInput.value : "";
+        const confirmVal = confirmPasswordInput ? confirmPasswordInput.value : "";
+        
+        if (!matchError) return;
+        
+        // Show error as soon as any character is different and both fields are non-empty
+        if (
+            confirmVal.length > 0 &&
+            newVal !== confirmVal
+        ) {
+            matchError.textContent = "Nowe hasła nie są identyczne!";
+            matchError.style.display = "block";
+        } else {
+            matchError.textContent = "";
+            matchError.style.display = "none";
+        }
+    }
 
-				if (newPasswordInput && confirmPasswordInput && matchError) {
-					newPasswordInput.addEventListener(
-						"input",
-						checkPasswordMatch
-					);
-					confirmPasswordInput.addEventListener(
-						"input",
-						checkPasswordMatch
-					);
-				}
-			});
+    if (newPasswordInput && confirmPasswordInput) {
+        newPasswordInput.addEventListener("input", checkPasswordMatch);
+        confirmPasswordInput.addEventListener("input", checkPasswordMatch);
+    }
+});
 
 			// Utility functions
 			function getCategoryName(category) {
