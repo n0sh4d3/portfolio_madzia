@@ -2271,46 +2271,23 @@
 				}
 			});
 
-			// Real-time password match validation with immediate toast
+			// Real-time password match validation for account modal (compare char by char)
+			// Real-time password match validation with toast
 document.addEventListener("DOMContentLoaded", function () {
     const newPasswordInput = document.querySelector("#accountModal #newPassword");
     const confirmPasswordInput = document.querySelector("#accountModal #confirmPassword");
 
     if (newPasswordInput && confirmPasswordInput) {
-        let typingTimer;
-        const typingDelay = 500; // Show toast 500ms after user stops typing
+        newPasswordInput.addEventListener("input", checkPasswordMatch);
+        confirmPasswordInput.addEventListener("input", checkPasswordMatch);
         
-        function handlePasswordInput() {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(checkPasswordMatch, typingDelay);
-        }
-        
-        // Show toast immediately on input but also after stopping typing
-        newPasswordInput.addEventListener("input", function() {
-            // Immediate check if confirm password has content
-            if (confirmPasswordInput.value.length > 0) {
-                checkPasswordMatch();
-            }
-            handlePasswordInput();
-        });
-        
-        confirmPasswordInput.addEventListener("input", function() {
-            // Always check immediately when typing in confirm field
-            checkPasswordMatch();
-            clearTimeout(typingTimer);
-        });
-        
-        // Show toast when trying to submit with mismatched passwords
+        // Also prevent form submission if passwords don't match
         const accountPasswordForm = document.querySelector("#accountModal #accountPasswordForm");
         if (accountPasswordForm) {
             accountPasswordForm.addEventListener("submit", function(e) {
-                const newVal = newPasswordInput.value;
-                const confirmVal = confirmPasswordInput.value;
-                
-                if (newVal !== confirmVal) {
+                if (confirmPasswordInput.validity.customError) {
                     e.preventDefault();
-                    showToast('Hasła muszą być identyczne aby kontynuować!', 'error', 4000);
-                    confirmPasswordInput.focus();
+                    showToast('Hasła muszą być identyczne!', 'error');
                     return false;
                 }
             });
@@ -2368,7 +2345,6 @@ function showToast(message, type = 'success', duration = 5000) {
 }
 
 // Update password match validation to use toast
-			// Update password match validation to use toast with immediate feedback
 function checkPasswordMatch() {
     const newPasswordInput = document.querySelector("#accountModal #newPassword");
     const confirmPasswordInput = document.querySelector("#accountModal #confirmPassword");
@@ -2381,15 +2357,17 @@ function checkPasswordMatch() {
     // Clear any previous validation state
     confirmPasswordInput.setCustomValidity('');
     
-    // Show toast immediately if passwords don't match and both fields have content
-    if (newVal.length > 0 && confirmVal.length > 0 && newVal !== confirmVal) {
+    // Show toast error if passwords don't match and confirm field has content
+    if (confirmVal.length > 0 && newVal !== confirmVal) {
         confirmPasswordInput.setCustomValidity('Passwords do not match');
-        showToast('Hasła nie są identyczne!', 'error', 3000);
-    } else if (newVal.length > 0 && confirmVal.length > 0 && newVal === confirmVal) {
-        confirmPasswordInput.setCustomValidity('');
-        showToast('Hasła są identyczne ✓', 'success', 2000);
+        // Only show toast once per mismatch session
+        if (!confirmPasswordInput.dataset.mismatchShown) {
+            showToast('Hasła nie są identyczne!', 'error', 3000);
+            confirmPasswordInput.dataset.mismatchShown = 'true';
+        }
     } else {
         confirmPasswordInput.setCustomValidity('');
+        confirmPasswordInput.dataset.mismatchShown = '';
     }
 }
 		</script>
