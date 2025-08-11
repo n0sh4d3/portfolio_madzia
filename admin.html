@@ -1228,11 +1228,7 @@
 			console.log("Starting admin panel script...");
 
 			let currentImages = [];
-			let categories = [
-				{ key: "Portrety", name: "Portrety" },
-				{ key: "Krajobrazy", name: "Krajobrazy" },
-				{ key: "Wydarzenia", name: "Wydarzenia" },
-			];
+			let categories = [];
 			let currentUsername = "";
 
 			// Initialize when DOM is ready
@@ -1246,45 +1242,30 @@
 				console.log("Initializing event listeners...");
 
 				// Account settings button
-				const accountBtn =
-					document.getElementById("accountSettingsBtn");
+				const accountBtn = document.getElementById("accountSettingsBtn");
 				if (accountBtn) {
 					accountBtn.addEventListener("click", function (e) {
 						e.preventDefault();
 						console.log("Account settings clicked");
 						if (currentUsername) {
-							document.getElementById("newUsername").value =
-								currentUsername;
+							document.getElementById("newUsername").value = currentUsername;
 						}
-						document
-							.getElementById("accountModal")
-							.classList.add("active");
+						document.getElementById("accountModal").classList.add("active");
 						document.getElementById("accountAlerts").innerHTML = "";
 					});
 					console.log("Account button listener added");
 				}
 
 				// Logout
-				document
-					.getElementById("logoutBtn")
-					.addEventListener("click", async function () {
-						try {
-							await fetch("/api/logout", { method: "POST" });
-							showLogin();
-							showAlert("Wylogowano pomyślnie!", "success");
-						} catch (error) {
-							showAlert("Błąd podczas wylogowywania", "error");
-						}
-					});
-
-				// Change password button
-				document
-					.getElementById("changePasswordBtn")
-					.addEventListener("click", function () {
-						document
-							.getElementById("passwordModal")
-							.classList.add("active");
-					});
+				document.getElementById("logoutBtn").addEventListener("click", async function () {
+					try {
+						await fetch("/api/logout", { method: "POST" });
+						showLogin();
+						showAlert("Wylogowano pomyślnie!", "success");
+					} catch (error) {
+						showAlert("Błąd podczas wylogowywania", "error");
+					}
+				});
 
 				// Close modals when clicking outside
 				document.querySelectorAll(".modal").forEach((modal) => {
@@ -1325,14 +1306,32 @@
 				document.getElementById("dashboard").classList.remove("active");
 			}
 
-			function showDashboard() {
+			async function showDashboard() {
 				document.getElementById("loginForm").style.display = "none";
 				document.getElementById("dashboard").classList.add("active");
+				await loadCategories();
 				loadCategoriesIntoSelects();
 				loadCategoriesDisplay();
 				loadStats();
 				loadImages();
 				loadUserInfo();
+			}
+
+			// Load categories from database
+			async function loadCategories() {
+				try {
+					const response = await fetch("/api/categories");
+					if (response.ok) {
+						categories = await response.json();
+						console.log("Categories loaded:", categories);
+					} else {
+						console.error("Failed to load categories");
+						showAlert("Błąd podczas ładowania kategorii", "error", "alertContainer2");
+					}
+				} catch (error) {
+					console.error("Error loading categories:", error);
+					showAlert("Błąd podczas ładowania kategorii", "error", "alertContainer2");
+				}
 			}
 
 			// Load current user info
@@ -1342,8 +1341,7 @@
 					if (response.ok) {
 						const user = await response.json();
 						currentUsername = user.username;
-						document.getElementById("currentUser").textContent =
-							user.username;
+						document.getElementById("currentUser").textContent = user.username;
 					}
 				} catch (error) {
 					console.error("Error loading user info:", error);
@@ -1351,127 +1349,194 @@
 			}
 
 			function closeAccountModal() {
-				document
-					.getElementById("accountModal")
-					.classList.remove("active");
-				document.getElementById("usernameForm").reset();
-				document.getElementById("passwordForm").reset();
+				document.getElementById("accountModal").classList.remove("active");
+				const usernameForm = document.getElementById("usernameForm");
+				const passwordForm = document.querySelector('#accountModal form[id="passwordForm"]');
+				if (usernameForm) usernameForm.reset();
+				if (passwordForm) passwordForm.reset();
 				document.getElementById("accountAlerts").innerHTML = "";
 				resetPasswordStrength();
 			}
 
 			function resetPasswordStrength() {
-				const strengthFill = document.querySelector(".strength-fill");
+				const strengthFill = document.querySelector('.strength-fill');
 				if (strengthFill) {
 					strengthFill.style.width = "0%";
+					strengthFill.style.backgroundColor = "#eee";
 				}
-				document
-					.querySelectorAll(".password-requirements li")
-					.forEach((li) => {
-						li.className = "";
-					});
+				document.querySelectorAll(".password-requirements li").forEach((li) => {
+					li.classList.remove("valid");
+				});
 			}
 
 			// Login
-			document
-				.getElementById("loginFormElement")
-				.addEventListener("submit", async function (e) {
-					e.preventDefault();
+			document.getElementById("loginFormElement").addEventListener("submit", async function (e) {
+				e.preventDefault();
 
-					const formData = new FormData(e.target);
-					const data = {
-						username: formData.get("username"),
-						password: formData.get("password"),
-					};
+				const formData = new FormData(e.target);
+				const data = {
+					username: formData.get("username"),
+					password: formData.get("password"),
+				};
 
-					try {
-						const response = await fetch("/api/login", {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify(data),
-						});
+				try {
+					const response = await fetch("/api/login", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(data),
+					});
 
-						const result = await response.json();
+					const result = await response.json();
 
-						if (result.success) {
-							showAlert("Zalogowano pomyślnie!", "success");
-							setTimeout(() => showDashboard(), 1000);
-						} else {
-							showAlert(
-								result.error || "Błąd logowania",
-								"error"
-							);
+					if (result.success) {
+						showAlert("Zalogowano pomyślnie!", "success");
+						setTimeout(() => showDashboard(), 1000);
+					} else {
+						showAlert(result.error || "Błąd logowania", "error");
+					}
+				} catch (error) {
+					showAlert("Błąd połączenia", "error");
+				}
+			});
+
+			// Username form submit in account modal
+			document.addEventListener("DOMContentLoaded", function() {
+				const usernameForm = document.getElementById("usernameForm");
+				if (usernameForm) {
+					usernameForm.addEventListener("submit", async function (e) {
+						e.preventDefault();
+
+						const currentPassword = document.getElementById("currentPasswordUsername").value;
+						const newUsername = document.getElementById("newUsername").value;
+
+						if (!currentPassword || !newUsername) {
+							showAlert("Wszystkie pola są wymagane!", "error", "accountAlerts");
+							return;
 						}
-					} catch (error) {
-						showAlert("Błąd połączenia", "error");
-					}
-				});
 
-			// Password form submit
-			document
-				.getElementById("passwordForm")
-				.addEventListener("submit", async function (e) {
-					e.preventDefault();
+						try {
+							const response = await fetch("/api/change-username", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({
+									currentPassword: currentPassword,
+									newUsername: newUsername,
+								}),
+							});
 
-					const currentPassword =
-						document.getElementById("currentPassword").value;
-					const newPassword =
-						document.getElementById("newPassword").value;
-					const confirmPassword =
-						document.getElementById("confirmPassword").value;
+							const result = await response.json();
 
-					if (newPassword !== confirmPassword) {
-						showAlert(
-							"Nowe hasła nie są identyczne!",
-							"error",
-							"alertContainer2"
-						);
-						return;
-					}
-
-					if (newPassword.length < 6) {
-						showAlert(
-							"Nowe hasło musi mieć co najmniej 6 znaków!",
-							"error",
-							"alertContainer2"
-						);
-						return;
-					}
-
-					try {
-						const response = await fetch("/api/change-password", {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({
-								currentPassword: currentPassword,
-								newPassword: newPassword,
-							}),
-						});
-
-						const result = await response.json();
-
-						if (result.success) {
-							showAlert(
-								"Hasło zostało zmienione pomyślnie!",
-								"success",
-								"alertContainer2"
-							);
-							closePasswordModal();
-						} else {
-							showAlert(
-								result.error || "Błąd podczas zmiany hasła",
-								"error",
-								"alertContainer2"
-							);
+							if (result.success) {
+								showAlert("Login został zmieniony pomyślnie!", "success", "accountAlerts");
+								currentUsername = result.newUsername;
+								document.getElementById("currentUser").textContent = result.newUsername;
+								usernameForm.reset();
+							} else {
+								showAlert(result.error || "Błąd podczas zmiany loginu", "error", "accountAlerts");
+							}
+						} catch (error) {
+							showAlert("Błąd połączenia", "error", "accountAlerts");
 						}
-					} catch (error) {
-						showAlert(
-							"Błąd połączenia",
-							"error",
-							"alertContainer2"
-						);
+					});
+				}
+
+				// Password form submit in account modal (target the specific one)
+				const accountPasswordForm = document.querySelector('#accountModal #passwordForm');
+				if (accountPasswordForm) {
+					accountPasswordForm.addEventListener("submit", async function (e) {
+						e.preventDefault();
+
+						const currentPassword = document.querySelector('#accountModal #currentPassword').value;
+						const newPassword = document.querySelector('#accountModal #newPassword').value;
+						const confirmPassword = document.querySelector('#accountModal #confirmPassword').value;
+
+						if (newPassword !== confirmPassword) {
+							showAlert("Nowe hasła nie są identyczne!", "error", "accountAlerts");
+							return;
+						}
+
+						if (newPassword.length < 8) {
+							showAlert("Nowe hasło musi mieć co najmniej 8 znaków!", "error", "accountAlerts");
+							return;
+						}
+
+						try {
+							const response = await fetch("/api/change-password", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({
+									currentPassword: currentPassword,
+									newPassword: newPassword,
+								}),
+							});
+
+							const result = await response.json();
+
+							if (result.success) {
+								showAlert("Hasło zostało zmienione pomyślnie!", "success", "accountAlerts");
+								accountPasswordForm.reset();
+								resetPasswordStrength();
+							} else {
+								showAlert(result.error || "Błąd podczas zmiany hasła", "error", "accountAlerts");
+							}
+						} catch (error) {
+							showAlert("Błąd połączenia", "error", "accountAlerts");
+						}
+					});
+				}
+
+				// Real-time password strength validation for account modal
+				const accountNewPassword = document.querySelector('#accountModal #newPassword');
+				if (accountNewPassword) {
+					accountNewPassword.addEventListener('input', function() {
+						const password = this.value;
+						updatePasswordStrength(password);
+					});
+				}
+			});
+
+			// Real-time password strength validation function
+			function updatePasswordStrength(password) {
+				const requirements = {
+					length: password.length >= 8,
+					upper: /[A-Z]/.test(password),
+					lower: /[a-z]/.test(password),
+					number: /\d/.test(password),
+					special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+				};
+
+				// Update requirement indicators
+				const reqLength = document.getElementById('req-length');
+				const reqUpper = document.getElementById('req-upper');
+				const reqLower = document.getElementById('req-lower');
+				const reqNumber = document.getElementById('req-number');
+				const reqSpecial = document.getElementById('req-special');
+
+				if (reqLength) reqLength.className = requirements.length ? 'valid' : '';
+				if (reqUpper) reqUpper.className = requirements.upper ? 'valid' : '';
+				if (reqLower) reqLower.className = requirements.lower ? 'valid' : '';
+				if (reqNumber) reqNumber.className = requirements.number ? 'valid' : '';
+				if (reqSpecial) reqSpecial.className = requirements.special ? 'valid' : '';
+
+				// Calculate strength
+				const validCount = Object.values(requirements).filter(Boolean).length;
+				const strengthPercentage = (validCount / 5) * 100;
+
+				// Update strength bar
+				const strengthFill = document.querySelector('.strength-fill');
+				if (strengthFill) {
+					strengthFill.style.width = strengthPercentage + '%';
+					
+					// Update strength bar color
+					if (strengthPercentage < 40) {
+						strengthFill.style.backgroundColor = '#dc3545';
+					} else if (strengthPercentage < 80) {
+						strengthFill.style.backgroundColor = '#ffc107';
+					} else {
+						strengthFill.style.backgroundColor = '#28a745';
 					}
-				});
+				}
+			}
 
 			// Load categories into selects
 			function loadCategoriesIntoSelects() {
@@ -1499,9 +1564,7 @@
 
 			// Load categories display
 			function loadCategoriesDisplay() {
-				const container = document.getElementById(
-					"categoriesContainer"
-				);
+				const container = document.getElementById("categoriesContainer");
 				container.innerHTML = categories
 					.map(
 						(cat) => `
@@ -1545,15 +1608,11 @@
 					: "Dodaj kategorię";
 				document.getElementById("categoryId").value = key;
 				document.getElementById("categoryName").value = name;
-				document
-					.getElementById("categoryModal")
-					.classList.add("active");
+				document.getElementById("categoryModal").classList.add("active");
 			};
 
 			window.closeCategoryModal = function () {
-				document
-					.getElementById("categoryModal")
-					.classList.remove("active");
+				document.getElementById("categoryModal").classList.remove("active");
 				document.getElementById("categoryForm").reset();
 			};
 
@@ -1574,6 +1633,49 @@
 				document.getElementById("editCategory").value = image.category;
 
 				document.getElementById("editModal").classList.add("active");
+			};
+
+			window.editCategory = function (key, name) {
+				openCategoryModal(key, name);
+			};
+
+			window.deleteCategory = async function (key) {
+				if (
+					!confirm(
+						"Czy na pewno chcesz usunąć tę kategorię? Ta operacja jest nieodwracalna."
+					)
+				) {
+					return;
+				}
+
+				try {
+					const response = await fetch(`/api/categories/${key}`, {
+						method: "DELETE",
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						showAlert(
+							"Kategoria została usunięta!",
+							"success",
+							"alertContainer2"
+						);
+						await loadCategories();
+						loadCategoriesDisplay();
+						loadCategoriesIntoSelects();
+						loadImages();
+						loadStats();
+					} else {
+						showAlert(
+							result.error || "Błąd podczas usuwania kategorii",
+							"error",
+							"alertContainer2"
+						);
+					}
+				} catch (error) {
+					showAlert("Błąd połączenia", "error", "alertContainer2");
+				}
 			};
 
 			window.deleteImage = async function (id) {
@@ -1614,65 +1716,65 @@
 				}
 			};
 
-			// Category form submit
-			document
-				.getElementById("categoryForm")
-				.addEventListener("submit", function (e) {
-					e.preventDefault();
+			// Category form submit - Updated to use API
+			document.getElementById("categoryForm").addEventListener("submit", async function (e) {
+				e.preventDefault();
 
-					const name = document
-						.getElementById("categoryName")
-						.value.trim();
-					const existingKey =
-						document.getElementById("categoryId").value;
+				const name = document.getElementById("categoryName").value.trim();
+				const existingKey = document.getElementById("categoryId").value;
 
-					if (!name) {
-						showAlert(
-							"Nazwa kategorii jest wymagana!",
-							"error",
-							"alertContainer2"
-						);
-						return;
-					}
-
-					// Check if name already exists (for new categories)
-					if (
-						!existingKey &&
-						categories.find((cat) => cat.name === name)
-					) {
-						showAlert(
-							"Kategoria o tej nazwie już istnieje!",
-							"error",
-							"alertContainer2"
-						);
-						return;
-					}
-
-					if (existingKey) {
-						// Edit existing category
-						const index = categories.findIndex(
-							(cat) => cat.key === existingKey
-						);
-						if (index !== -1) {
-							categories[index].name = name;
-							categories[index].key = name;
-						}
-					} else {
-						// Add new category
-						categories.push({ key: name, name: name });
-					}
-
-					loadCategoriesDisplay();
-					loadCategoriesIntoSelects();
-					closeCategoryModal();
+				if (!name) {
 					showAlert(
-						existingKey
-							? "Kategoria została zaktualizowana!"
-							: "Kategoria została dodana!",
-						"success",
+						"Nazwa kategorii jest wymagana!",
+						"error",
 						"alertContainer2"
 					);
-				});
+					return;
+				}
+
+				try {
+					let response;
+					if (existingKey) {
+						// Edit existing category
+						response = await fetch(`/api/categories/${existingKey}`, {
+							method: "PUT",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ name: name }),
+						});
+					} else {
+						// Add new category
+						response = await fetch("/api/categories", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ name: name }),
+						});
+					}
+
+					const result = await response.json();
+
+					if (result.success) {
+						showAlert(
+							existingKey
+								? "Kategoria została zaktualizowana!"
+								: "Kategoria została dodana!",
+							"success",
+							"alertContainer2"
+						);
+						await loadCategories();
+						loadCategoriesDisplay();
+						loadCategoriesIntoSelects();
+						closeCategoryModal();
+					} else {
+						showAlert(
+							result.error || "Błąd podczas zapisywania kategorii",
+							"error",
+							"alertContainer2"
+						);
+					}
+				} catch (error) {
+					showAlert("Błąd połączenia", "error", "alertContainer2");
+				}
+			});
 
 			// Load statistics
 			async function loadStats() {
@@ -1680,8 +1782,7 @@
 					const response = await fetch("/api/stats");
 					const stats = await response.json();
 
-					const statsContainer =
-						document.getElementById("statsContainer");
+					const statsContainer = document.getElementById("statsContainer");
 					statsContainer.innerHTML = `
                     <div class="stat-card">
                         <div class="stat-number">${stats.totalImages}</div>
@@ -1772,191 +1873,118 @@
 			}
 
 			// Upload image
-			document
-				.getElementById("uploadForm")
-				.addEventListener("submit", async function (e) {
-					e.preventDefault();
+			document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+				e.preventDefault();
 
-					const formData = new FormData(e.target);
-
-					try {
-						const response = await fetch("/api/images/upload", {
-							method: "POST",
-							body: formData,
-						});
-
-						const result = await response.json();
-
-						if (result.success) {
-							showAlert(
-								"Zdjęcie zostało dodane pomyślnie!",
-								"success",
-								"alertContainer2"
-							);
-							e.target.reset();
-							document.getElementById(
-								"previewImage"
-							).style.display = "none";
-							loadImages();
-							loadStats();
-						} else {
-							showAlert(
-								result.error ||
-									"Błąd podczas dodawania zdjęcia",
-								"error",
-								"alertContainer2"
-							);
-						}
-					} catch (error) {
-						showAlert(
-							"Błąd połączenia",
-							"error",
-							"alertContainer2"
-						);
-					}
-				});
-
-			// File preview
-			document
-				.getElementById("imageFile")
-				.addEventListener("change", function (e) {
-					const file = e.target.files[0];
-					const preview = document.getElementById("previewImage");
-
-					if (file) {
-						const reader = new FileReader();
-						reader.onload = function (e) {
-							preview.src = e.target.result;
-							preview.style.display = "block";
-						};
-						reader.readAsDataURL(file);
-					} else {
-						preview.style.display = "none";
-					}
-				});
-
-			// Category filter
-			document
-				.getElementById("categoryFilter")
-				.addEventListener("change", function (e) {
-					loadImages(e.target.value);
-				});
-
-			// Refresh button
-			document
-				.getElementById("refreshBtn")
-				.addEventListener("click", function () {
-					const category =
-						document.getElementById("categoryFilter").value;
-					loadImages(category);
-					loadStats();
-				});
-
-			// Edit image
-			function editImage(id) {
-				const image = currentImages.find((img) => img.id === id);
-				if (!image) return;
-
-				document.getElementById("editImageId").value = id;
-				document.getElementById("editTitle").value = image.title;
-				document.getElementById("editDescription").value =
-					image.description || "";
-				document.getElementById("editCategory").value = image.category;
-
-				document.getElementById("editModal").classList.add("active");
-			}
-
-			function closeEditModal() {
-				document.getElementById("editModal").classList.remove("active");
-			}
-
-			// Edit form submit
-			document
-				.getElementById("editForm")
-				.addEventListener("submit", async function (e) {
-					e.preventDefault();
-
-					const id = document.getElementById("editImageId").value;
-					const data = {
-						title: document.getElementById("editTitle").value,
-						description:
-							document.getElementById("editDescription").value,
-						category: document.getElementById("editCategory").value,
-					};
-
-					try {
-						const response = await fetch(`/api/images/${id}`, {
-							method: "PUT",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify(data),
-						});
-
-						const result = await response.json();
-
-						if (result.success) {
-							showAlert(
-								"Zdjęcie zostało zaktualizowane!",
-								"success",
-								"alertContainer2"
-							);
-							closeEditModal();
-							loadImages(
-								document.getElementById("categoryFilter").value
-							);
-						} else {
-							showAlert(
-								result.error || "Błąd podczas aktualizacji",
-								"error",
-								"alertContainer2"
-							);
-						}
-					} catch (error) {
-						showAlert(
-							"Błąd połączenia",
-							"error",
-							"alertContainer2"
-						);
-					}
-				});
-
-			// Delete image
-			async function deleteImage(id) {
-				if (
-					!confirm(
-						"Czy na pewno chcesz usunąć to zdjęcie? Ta operacja jest nieodwracalna."
-					)
-				) {
-					return;
-				}
+				const formData = new FormData(e.target);
 
 				try {
-					const response = await fetch(`/api/images/${id}`, {
-						method: "DELETE",
+					const response = await fetch("/api/images/upload", {
+						method: "POST",
+						body: formData,
 					});
 
 					const result = await response.json();
 
 					if (result.success) {
 						showAlert(
-							"Zdjęcie zostało usunięte!",
+							"Zdjęcie zostało dodane pomyślnie!",
 							"success",
 							"alertContainer2"
 						);
-						loadImages(
-							document.getElementById("categoryFilter").value
-						);
+						e.target.reset();
+						document.getElementById("previewImage").style.display = "none";
+						loadImages();
 						loadStats();
 					} else {
 						showAlert(
-							result.error || "Błąd podczas usuwania",
+							result.error ||
+								"Błąd podczas dodawania zdjęcia",
 							"error",
 							"alertContainer2"
 						);
 					}
 				} catch (error) {
-					showAlert("Błąd połączenia", "error", "alertContainer2");
+					showAlert(
+						"Błąd połączenia",
+						"error",
+						"alertContainer2"
+					);
 				}
-			}
+			});
+
+			// File preview
+			document.getElementById("imageFile").addEventListener("change", function (e) {
+				const file = e.target.files[0];
+				const preview = document.getElementById("previewImage");
+
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						preview.src = e.target.result;
+						preview.style.display = "block";
+					};
+					reader.readAsDataURL(file);
+				} else {
+					preview.style.display = "none";
+				}
+			});
+
+			// Category filter
+			document.getElementById("categoryFilter").addEventListener("change", function (e) {
+				loadImages(e.target.value);
+			});
+
+			// Refresh button
+			document.getElementById("refreshBtn").addEventListener("click", function () {
+				const category = document.getElementById("categoryFilter").value;
+				loadImages(category);
+				loadStats();
+			});
+
+			// Edit form submit
+			document.getElementById("editForm").addEventListener("submit", async function (e) {
+				e.preventDefault();
+
+				const id = document.getElementById("editImageId").value;
+				const data = {
+					title: document.getElementById("editTitle").value,
+					description: document.getElementById("editDescription").value,
+					category: document.getElementById("editCategory").value,
+				};
+
+				try {
+					const response = await fetch(`/api/images/${id}`, {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(data),
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						showAlert(
+							"Zdjęcie zostało zaktualizowane!",
+							"success",
+							"alertContainer2"
+						);
+						closeEditModal();
+						loadImages(document.getElementById("categoryFilter").value);
+					} else {
+						showAlert(
+							result.error || "Błąd podczas aktualizacji",
+							"error",
+							"alertContainer2"
+						);
+					}
+				} catch (error) {
+					showAlert(
+						"Błąd połączenia",
+						"error",
+						"alertContainer2"
+					);
+				}
+			});
 
 			// Utility functions
 			function getCategoryName(category) {
@@ -1966,6 +1994,8 @@
 
 			function showAlert(message, type, containerId = "alertContainer") {
 				const container = document.getElementById(containerId);
+				if (!container) return;
+				
 				const alert = document.createElement("div");
 				alert.className = `alert alert-${type}`;
 				alert.textContent = message;
@@ -1974,7 +2004,9 @@
 				container.appendChild(alert);
 
 				setTimeout(() => {
-					alert.remove();
+					if (alert.parentNode) {
+						alert.remove();
+					}
 				}, 5000);
 			}
 

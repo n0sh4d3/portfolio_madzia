@@ -38,6 +38,15 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+	// Categories table
+	db.run(`CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        sort_order INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
 	// Images table
 	db.run(`CREATE TABLE IF NOT EXISTS images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,6 +64,16 @@ db.serialize(() => {
 		"admin",
 		hashedPassword,
 	]);
+
+	// Insert default categories
+	const defaultCategories = [];
+
+	defaultCategories.forEach((cat, index) => {
+		db.run(
+			`INSERT OR IGNORE INTO categories (key, name, sort_order) VALUES (?, ?, ?)`,
+			[cat.key, cat.name, cat.sort_order]
+		);
+	});
 });
 
 // Create uploads directory
@@ -234,48 +253,74 @@ app.post(
 					.json({ error: "Tytuł i kategoria są wymagane" });
 			}
 
-			// Optimize image with Sharp
-			const optimizedFilename = "opt_" + req.file.filename;
-			await sharp(req.file.path)
-				.resize(1200, 1200, {
-					fit: "inside",
-					withoutEnlargement: true,
-				})
-				.jpeg({ quality: 85 })
-				.toFile(path.join("uploads", optimizedFilename));
-
-			// Remove original file
-			fs.unlinkSync(req.file.path);
-
-			// Save to database
-			db.run(
-				"INSERT INTO images (filename, original_name, title, description, category) VALUES (?, ?, ?, ?, ?)",
-				[
-					optimizedFilename,
-					req.file.originalname,
-					title,
-					description,
-					category,
-				],
-				function (err) {
+			// Check if category exists
+			db.get(
+				"SELECT * FROM categories WHERE key = ?",
+				[category],
+				async (err, cat) => {
 					if (err) {
 						return res
 							.status(500)
 							.json({ error: "Database error" });
 					}
 
-					res.json({
-						success: true,
-						message: "Zdjęcie zostało dodane pomyślnie",
-						image: {
-							id: this.lastID,
-							filename: optimizedFilename,
-							title,
-							description,
-							category,
-							src: `/uploads/${optimizedFilename}`,
-						},
-					});
+					if (!cat) {
+						return res
+							.status(400)
+							.json({ error: "Kategoria nie istnieje" });
+					}
+
+					try {
+						// Optimize image with Sharp
+						const optimizedFilename = "opt_" + req.file.filename;
+						await sharp(req.file.path)
+							.resize(1200, 1200, {
+								fit: "inside",
+								withoutEnlargement: true,
+							})
+							.jpeg({ quality: 85 })
+							.toFile(path.join("uploads", optimizedFilename));
+
+						// Remove original file
+						fs.unlinkSync(req.file.path);
+
+						// Save to database
+						db.run(
+							"INSERT INTO images (filename, original_name, title, description, category) VALUES (?, ?, ?, ?, ?)",
+							[
+								optimizedFilename,
+								req.file.originalname,
+								title,
+								description,
+								category,
+							],
+							function (err) {
+								if (err) {
+									return res
+										.status(500)
+										.json({ error: "Database error" });
+								}
+
+								res.json({
+									success: true,
+									message: "Zdjęcie zostało dodane pomyślnie",
+									image: {
+										id: this.lastID,
+										filename: optimizedFilename,
+										title,
+										description,
+										category,
+										src: `/uploads/${optimizedFilename}`,
+									},
+								});
+							}
+						);
+					} catch (error) {
+						console.error("Image processing error:", error);
+						res.status(500).json({
+							error: "Błąd podczas przetwarzania zdjęcia",
+						});
+					}
 				}
 			);
 		} catch (error) {
@@ -336,26 +381,37 @@ app.put("/api/images/:id", requireAuth, (req, res) => {
 		return res.status(400).json({ error: "Tytuł i kategoria są wymagane" });
 	}
 
-	db.run(
-		"UPDATE images SET title = ?, description = ?, category = ? WHERE id = ?",
-		[title, description, category, imageId],
-		function (err) {
-			if (err) {
-				return res.status(500).json({ error: "Database error" });
-			}
-
-			if (this.changes === 0) {
-				return res
-					.status(404)
-					.json({ error: "Zdjęcie nie zostało znalezione" });
-			}
-
-			res.json({
-				success: true,
-				message: "Zdjęcie zostało zaktualizowane",
-			});
+	// Check if category exists
+	db.get("SELECT * FROM categories WHERE key = ?", [category], (err, cat) => {
+		if (err) {
+			return res.status(500).json({ error: "Database error" });
 		}
-	);
+
+		if (!cat) {
+			return res.status(400).json({ error: "Kategoria nie istnieje" });
+		}
+
+		db.run(
+			"UPDATE images SET title = ?, description = ?, category = ? WHERE id = ?",
+			[title, description, category, imageId],
+			function (err) {
+				if (err) {
+					return res.status(500).json({ error: "Database error" });
+				}
+
+				if (this.changes === 0) {
+					return res
+						.status(404)
+						.json({ error: "Zdjęcie nie zostało znalezione" });
+				}
+
+				res.json({
+					success: true,
+					message: "Zdjęcie zostało zaktualizowane",
+				});
+			}
+		);
+	});
 });
 
 // Get image statistics
@@ -387,44 +443,159 @@ app.get("/api/stats", requireAuth, (req, res) => {
 	);
 });
 
-// Get categories
+// Get categories - Now from database!
 app.get("/api/categories", (req, res) => {
-	// Default categories - Polish only
-	const defaultCategories = [
-		{ key: "Portrety", name: "Portrety" },
-		{ key: "Krajobrazy", name: "Krajobrazy" },
-		{ key: "Wydarzenia", name: "Wydarzenia" },
-	];
+	db.all(
+		"SELECT * FROM categories ORDER BY sort_order, name",
+		(err, categories) => {
+			if (err) {
+				console.error("Database error:", err);
+				return res.status(500).json({ error: "Database error" });
+			}
 
-	res.json(defaultCategories);
+			res.json(categories);
+		}
+	);
 });
 
-// Add category (this could be enhanced to store in database)
+// Add category - Now saves to database!
 app.post("/api/categories", requireAuth, (req, res) => {
 	const { name } = req.body;
 
-	if (!name) {
+	if (!name || !name.trim()) {
 		return res.status(400).json({ error: "Nazwa kategorii jest wymagana" });
 	}
 
-	// In a real app, you'd save this to the database
-	res.json({ success: true, message: "Kategoria została dodana" });
+	const trimmedName = name.trim();
+	const key = trimmedName; // Use name as key for simplicity
+
+	// Check if category already exists
+	db.get(
+		"SELECT * FROM categories WHERE key = ? OR name = ?",
+		[key, trimmedName],
+		(err, existing) => {
+			if (err) {
+				return res.status(500).json({ error: "Database error" });
+			}
+
+			if (existing) {
+				return res.status(400).json({
+					error: "Kategoria o tej nazwie już istnieje",
+				});
+			}
+
+			// Get the highest sort_order to add new category at the end
+			db.get(
+				"SELECT MAX(sort_order) as max_order FROM categories",
+				(err, result) => {
+					if (err) {
+						return res
+							.status(500)
+							.json({ error: "Database error" });
+					}
+
+					const sortOrder = (result.max_order || 0) + 1;
+
+					db.run(
+						"INSERT INTO categories (key, name, sort_order) VALUES (?, ?, ?)",
+						[key, trimmedName, sortOrder],
+						function (err) {
+							if (err) {
+								console.error("Insert error:", err);
+								return res
+									.status(500)
+									.json({ error: "Database error" });
+							}
+
+							res.json({
+								success: true,
+								message: "Kategoria została dodana",
+								category: {
+									id: this.lastID,
+									key: key,
+									name: trimmedName,
+									sort_order: sortOrder,
+								},
+							});
+						}
+					);
+				}
+			);
+		}
+	);
 });
 
-// Update category
+// Update category - Now updates database!
 app.put("/api/categories/:key", requireAuth, (req, res) => {
 	const { key } = req.params;
 	const { name } = req.body;
 
-	if (!name) {
+	if (!name || !name.trim()) {
 		return res.status(400).json({ error: "Nazwa kategorii jest wymagana" });
 	}
 
-	// In a real app, you'd update this in the database
-	res.json({ success: true, message: "Kategoria została zaktualizowana" });
+	const trimmedName = name.trim();
+
+	// Check if the new name already exists (but not for the current category)
+	db.get(
+		"SELECT * FROM categories WHERE name = ? AND key != ?",
+		[trimmedName, key],
+		(err, existing) => {
+			if (err) {
+				return res.status(500).json({ error: "Database error" });
+			}
+
+			if (existing) {
+				return res.status(400).json({
+					error: "Kategoria o tej nazwie już istnieje",
+				});
+			}
+
+			// Update the category
+			db.run(
+				"UPDATE categories SET name = ?, key = ? WHERE key = ?",
+				[trimmedName, trimmedName, key],
+				function (err) {
+					if (err) {
+						console.error("Update error:", err);
+						return res
+							.status(500)
+							.json({ error: "Database error" });
+					}
+
+					if (this.changes === 0) {
+						return res.status(404).json({
+							error: "Kategoria nie została znaleziona",
+						});
+					}
+
+					// Also update any images that use this category
+					db.run(
+						"UPDATE images SET category = ? WHERE category = ?",
+						[trimmedName, key],
+						(err) => {
+							if (err) {
+								console.error("Update images error:", err);
+								// Don't fail the request, just log the error
+							}
+
+							res.json({
+								success: true,
+								message: "Kategoria została zaktualizowana",
+								category: {
+									key: trimmedName,
+									name: trimmedName,
+								},
+							});
+						}
+					);
+				}
+			);
+		}
+	);
 });
 
-// Delete category
+// Delete category - Now deletes from database!
 app.delete("/api/categories/:key", requireAuth, (req, res) => {
 	const { key } = req.params;
 
@@ -443,8 +614,30 @@ app.delete("/api/categories/:key", requireAuth, (req, res) => {
 				});
 			}
 
-			// In a real app, you'd delete from the database
-			res.json({ success: true, message: "Kategoria została usunięta" });
+			// Delete the category
+			db.run(
+				"DELETE FROM categories WHERE key = ?",
+				[key],
+				function (err) {
+					if (err) {
+						console.error("Delete error:", err);
+						return res
+							.status(500)
+							.json({ error: "Database error" });
+					}
+
+					if (this.changes === 0) {
+						return res.status(404).json({
+							error: "Kategoria nie została znaleziona",
+						});
+					}
+
+					res.json({
+						success: true,
+						message: "Kategoria została usunięta",
+					});
+				}
+			);
 		}
 	);
 });
