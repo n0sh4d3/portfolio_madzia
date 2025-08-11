@@ -670,23 +670,16 @@
 			}
 
 			.password-requirements li::before {
-				content: "✗";
-				position: absolute;
-				left: 12px;
-				top: 8px;
-				color: #dc3545;
-				font-weight: bold;
-				transition: all 0.3s ease;
+				/* Remove red emoji, keep only green for .valid */
+				display: none;
+			}
+			.password-requirements li.valid::before {
+				display: none;
 			}
 
 			.password-requirements li.valid {
 				color: #28a745;
 				background: rgba(40, 167, 69, 0.1);
-			}
-
-			.password-requirements li.valid::before {
-				content: "✓";
-				color: #28a745;
 			}
 
 			/* Mobile optimizations */
@@ -1093,15 +1086,7 @@
 							<div class="strength-bar">
 								<div class="strength-fill"></div>
 							</div>
-							<ul class="password-requirements">
-								<li id="req-length">Co najmniej 8 znaków</li>
-								<li id="req-upper">Wielka litera</li>
-								<li id="req-lower">Mała litera</li>
-								<li id="req-number">Cyfra</li>
-								<li id="req-special">
-									Znak specjalny (!@#$%^&*)
-								</li>
-							</ul>
+							<ul class="password-requirements"></ul>
 						</div>
 					</div>
 					<div class="form-group">
@@ -1115,6 +1100,12 @@
 							minlength="8"
 						/>
 					</div>
+					<!-- Error message just above the button, inside the form -->
+					<div
+						id="passwordMatchError"
+						class="password-match-error"
+						style="margin-bottom: 10px"
+					></div>
 					<button type="submit" class="btn">Zmień hasło</button>
 				</form>
 			</div>
@@ -1218,6 +1209,12 @@
 								minlength="8"
 							/>
 						</div>
+						<!-- Error message just above the button, with a small margin for visibility -->
+						<div
+							id="passwordMatchError"
+							class="password-match-error"
+							style="margin-bottom: 10px"
+						></div>
 						<button type="submit" class="btn">Zmień hasło</button>
 					</form>
 				</div>
@@ -1242,30 +1239,36 @@
 				console.log("Initializing event listeners...");
 
 				// Account settings button
-				const accountBtn = document.getElementById("accountSettingsBtn");
+				const accountBtn =
+					document.getElementById("accountSettingsBtn");
 				if (accountBtn) {
 					accountBtn.addEventListener("click", function (e) {
 						e.preventDefault();
 						console.log("Account settings clicked");
 						if (currentUsername) {
-							document.getElementById("newUsername").value = currentUsername;
+							document.getElementById("newUsername").value =
+								currentUsername;
 						}
-						document.getElementById("accountModal").classList.add("active");
+						document
+							.getElementById("accountModal")
+							.classList.add("active");
 						document.getElementById("accountAlerts").innerHTML = "";
 					});
 					console.log("Account button listener added");
 				}
 
 				// Logout
-				document.getElementById("logoutBtn").addEventListener("click", async function () {
-					try {
-						await fetch("/api/logout", { method: "POST" });
-						showLogin();
-						showAlert("Wylogowano pomyślnie!", "success");
-					} catch (error) {
-						showAlert("Błąd podczas wylogowywania", "error");
-					}
-				});
+				document
+					.getElementById("logoutBtn")
+					.addEventListener("click", async function () {
+						try {
+							await fetch("/api/logout", { method: "POST" });
+							showLogin();
+							showAlert("Wylogowano pomyślnie!", "success");
+						} catch (error) {
+							showAlert("Błąd podczas wylogowywania", "error");
+						}
+					});
 
 				// Close modals when clicking outside
 				document.querySelectorAll(".modal").forEach((modal) => {
@@ -1326,11 +1329,19 @@
 						console.log("Categories loaded:", categories);
 					} else {
 						console.error("Failed to load categories");
-						showAlert("Błąd podczas ładowania kategorii", "error", "alertContainer2");
+						showAlert(
+							"Błąd podczas ładowania kategorii",
+							"error",
+							"alertContainer2"
+						);
 					}
 				} catch (error) {
 					console.error("Error loading categories:", error);
-					showAlert("Błąd podczas ładowania kategorii", "error", "alertContainer2");
+					showAlert(
+						"Błąd podczas ładowania kategorii",
+						"error",
+						"alertContainer2"
+					);
 				}
 			}
 
@@ -1341,7 +1352,8 @@
 					if (response.ok) {
 						const user = await response.json();
 						currentUsername = user.username;
-						document.getElementById("currentUser").textContent = user.username;
+						document.getElementById("currentUser").textContent =
+							user.username;
 					}
 				} catch (error) {
 					console.error("Error loading user info:", error);
@@ -1349,9 +1361,13 @@
 			}
 
 			function closeAccountModal() {
-				document.getElementById("accountModal").classList.remove("active");
+				document
+					.getElementById("accountModal")
+					.classList.remove("active");
 				const usernameForm = document.getElementById("usernameForm");
-				const passwordForm = document.querySelector('#accountModal form[id="passwordForm"]');
+				const passwordForm = document.querySelector(
+					'#accountModal form[id="passwordForm"]'
+				);
 				if (usernameForm) usernameForm.reset();
 				if (passwordForm) passwordForm.reset();
 				document.getElementById("accountAlerts").innerHTML = "";
@@ -1359,136 +1375,209 @@
 			}
 
 			function resetPasswordStrength() {
-				const strengthFill = document.querySelector('.strength-fill');
+				const strengthFill = document.querySelector(".strength-fill");
 				if (strengthFill) {
 					strengthFill.style.width = "0%";
 					strengthFill.style.backgroundColor = "#eee";
 				}
-				document.querySelectorAll(".password-requirements li").forEach((li) => {
-					li.classList.remove("valid");
-				});
+				document
+					.querySelectorAll(".password-requirements li")
+					.forEach((li) => {
+						li.classList.remove("valid");
+					});
 			}
 
 			// Login
-			document.getElementById("loginFormElement").addEventListener("submit", async function (e) {
-				e.preventDefault();
+			document
+				.getElementById("loginFormElement")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
 
-				const formData = new FormData(e.target);
-				const data = {
-					username: formData.get("username"),
-					password: formData.get("password"),
-				};
+					const formData = new FormData(e.target);
+					const data = {
+						username: formData.get("username"),
+						password: formData.get("password"),
+					};
 
-				try {
-					const response = await fetch("/api/login", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify(data),
-					});
+					try {
+						const response = await fetch("/api/login", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(data),
+						});
 
-					const result = await response.json();
+						const result = await response.json();
 
-					if (result.success) {
-						showAlert("Zalogowano pomyślnie!", "success");
-						setTimeout(() => showDashboard(), 1000);
-					} else {
-						showAlert(result.error || "Błąd logowania", "error");
+						if (result.success) {
+							showAlert("Zalogowano pomyślnie!", "success");
+							setTimeout(() => showDashboard(), 1000);
+						} else {
+							showAlert(
+								result.error || "Błąd logowania",
+								"error"
+							);
+						}
+					} catch (error) {
+						showAlert("Błąd połączenia", "error");
 					}
-				} catch (error) {
-					showAlert("Błąd połączenia", "error");
-				}
-			});
+				});
 
 			// Username form submit in account modal
-			document.addEventListener("DOMContentLoaded", function() {
+			document.addEventListener("DOMContentLoaded", function () {
 				const usernameForm = document.getElementById("usernameForm");
 				if (usernameForm) {
 					usernameForm.addEventListener("submit", async function (e) {
 						e.preventDefault();
 
-						const currentPassword = document.getElementById("currentPasswordUsername").value;
-						const newUsername = document.getElementById("newUsername").value;
+						const currentPassword = document.getElementById(
+							"currentPasswordUsername"
+						).value;
+						const newUsername =
+							document.getElementById("newUsername").value;
 
 						if (!currentPassword || !newUsername) {
-							showAlert("Wszystkie pola są wymagane!", "error", "accountAlerts");
+							showAlert(
+								"Wszystkie pola są wymagane!",
+								"error",
+								"accountAlerts"
+							);
 							return;
 						}
 
 						try {
-							const response = await fetch("/api/change-username", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									currentPassword: currentPassword,
-									newUsername: newUsername,
-								}),
-							});
+							const response = await fetch(
+								"/api/change-username",
+								{
+									method: "POST",
+									headers: {
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify({
+										currentPassword: currentPassword,
+										newUsername: newUsername,
+									}),
+								}
+							);
 
 							const result = await response.json();
 
 							if (result.success) {
-								showAlert("Login został zmieniony pomyślnie!", "success", "accountAlerts");
+								showAlert(
+									"Login został zmieniony pomyślnie!",
+									"success",
+									"accountAlerts"
+								);
 								currentUsername = result.newUsername;
-								document.getElementById("currentUser").textContent = result.newUsername;
+								document.getElementById(
+									"currentUser"
+								).textContent = result.newUsername;
 								usernameForm.reset();
 							} else {
-								showAlert(result.error || "Błąd podczas zmiany loginu", "error", "accountAlerts");
+								showAlert(
+									result.error ||
+										"Błąd podczas zmiany loginu",
+									"error",
+									"accountAlerts"
+								);
 							}
 						} catch (error) {
-							showAlert("Błąd połączenia", "error", "accountAlerts");
+							showAlert(
+								"Błąd połączenia",
+								"error",
+								"accountAlerts"
+							);
 						}
 					});
 				}
 
 				// Password form submit in account modal (target the specific one)
-				const accountPasswordForm = document.querySelector('#accountModal #passwordForm');
+				const accountPasswordForm = document.querySelector(
+					"#accountModal #passwordForm"
+				);
 				if (accountPasswordForm) {
-					accountPasswordForm.addEventListener("submit", async function (e) {
-						e.preventDefault();
+					accountPasswordForm.addEventListener(
+						"submit",
+						async function (e) {
+							e.preventDefault();
 
-						const currentPassword = document.querySelector('#accountModal #currentPassword').value;
-						const newPassword = document.querySelector('#accountModal #newPassword').value;
-						const confirmPassword = document.querySelector('#accountModal #confirmPassword').value;
+							const currentPassword = document.querySelector(
+								"#accountModal #currentPassword"
+							).value;
+							const newPassword = document.querySelector(
+								"#accountModal #newPassword"
+							).value;
+							const confirmPassword = document.querySelector(
+								"#accountModal #confirmPassword"
+							).value;
 
-						if (newPassword !== confirmPassword) {
-							showAlert("Nowe hasła nie są identyczne!", "error", "accountAlerts");
-							return;
-						}
-
-						if (newPassword.length < 8) {
-							showAlert("Nowe hasło musi mieć co najmniej 8 znaków!", "error", "accountAlerts");
-							return;
-						}
-
-						try {
-							const response = await fetch("/api/change-password", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									currentPassword: currentPassword,
-									newPassword: newPassword,
-								}),
-							});
-
-							const result = await response.json();
-
-							if (result.success) {
-								showAlert("Hasło zostało zmienione pomyślnie!", "success", "accountAlerts");
-								accountPasswordForm.reset();
-								resetPasswordStrength();
-							} else {
-								showAlert(result.error || "Błąd podczas zmiany hasła", "error", "accountAlerts");
+							if (newPassword !== confirmPassword) {
+								showAlert(
+									"Nowe hasła nie są identyczne!",
+									"error",
+									"accountAlerts"
+								);
+								return;
 							}
-						} catch (error) {
-							showAlert("Błąd połączenia", "error", "accountAlerts");
+
+							if (newPassword.length < 8) {
+								showAlert(
+									"Nowe hasło musi mieć co najmniej 8 znaków!",
+									"error",
+									"accountAlerts"
+								);
+								return;
+							}
+
+							try {
+								const response = await fetch(
+									"/api/change-password",
+									{
+										method: "POST",
+										headers: {
+											"Content-Type": "application/json",
+										},
+										body: JSON.stringify({
+											currentPassword: currentPassword,
+											newPassword: newPassword,
+										}),
+									}
+								);
+
+								const result = await response.json();
+
+								if (result.success) {
+									showAlert(
+										"Hasło zostało zmienione pomyślnie!",
+										"success",
+										"accountAlerts"
+									);
+									accountPasswordForm.reset();
+									resetPasswordStrength();
+								} else {
+									showAlert(
+										result.error ||
+											"Błąd podczas zmiany hasła",
+										"error",
+										"accountAlerts"
+									);
+								}
+							} catch (error) {
+								showAlert(
+									"Błąd połączenia",
+									"error",
+									"accountAlerts"
+								);
+							}
 						}
-					});
+					);
 				}
 
 				// Real-time password strength validation for account modal
-				const accountNewPassword = document.querySelector('#accountModal #newPassword');
+				const accountNewPassword = document.querySelector(
+					"#accountModal #newPassword"
+				);
 				if (accountNewPassword) {
-					accountNewPassword.addEventListener('input', function() {
+					accountNewPassword.addEventListener("input", function () {
 						const password = this.value;
 						updatePasswordStrength(password);
 					});
@@ -1502,38 +1591,44 @@
 					upper: /[A-Z]/.test(password),
 					lower: /[a-z]/.test(password),
 					number: /\d/.test(password),
-					special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+					special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
 				};
 
 				// Update requirement indicators
-				const reqLength = document.getElementById('req-length');
-				const reqUpper = document.getElementById('req-upper');
-				const reqLower = document.getElementById('req-lower');
-				const reqNumber = document.getElementById('req-number');
-				const reqSpecial = document.getElementById('req-special');
+				const reqLength = document.getElementById("req-length");
+				const reqUpper = document.getElementById("req-upper");
+				const reqLower = document.getElementById("req-lower");
+				const reqNumber = document.getElementById("req-number");
+				const reqSpecial = document.getElementById("req-special");
 
-				if (reqLength) reqLength.className = requirements.length ? 'valid' : '';
-				if (reqUpper) reqUpper.className = requirements.upper ? 'valid' : '';
-				if (reqLower) reqLower.className = requirements.lower ? 'valid' : '';
-				if (reqNumber) reqNumber.className = requirements.number ? 'valid' : '';
-				if (reqSpecial) reqSpecial.className = requirements.special ? 'valid' : '';
+				if (reqLength)
+					reqLength.className = requirements.length ? "valid" : "";
+				if (reqUpper)
+					reqUpper.className = requirements.upper ? "valid" : "";
+				if (reqLower)
+					reqLower.className = requirements.lower ? "valid" : "";
+				if (reqNumber)
+					reqNumber.className = requirements.number ? "valid" : "";
+				if (reqSpecial)
+					reqSpecial.className = requirements.special ? "valid" : "";
 
 				// Calculate strength
-				const validCount = Object.values(requirements).filter(Boolean).length;
+				const validCount =
+					Object.values(requirements).filter(Boolean).length;
 				const strengthPercentage = (validCount / 5) * 100;
 
 				// Update strength bar
-				const strengthFill = document.querySelector('.strength-fill');
+				const strengthFill = document.querySelector(".strength-fill");
 				if (strengthFill) {
-					strengthFill.style.width = strengthPercentage + '%';
-					
+					strengthFill.style.width = strengthPercentage + "%";
+
 					// Update strength bar color
 					if (strengthPercentage < 40) {
-						strengthFill.style.backgroundColor = '#dc3545';
+						strengthFill.style.backgroundColor = "#dc3545";
 					} else if (strengthPercentage < 80) {
-						strengthFill.style.backgroundColor = '#ffc107';
+						strengthFill.style.backgroundColor = "#ffc107";
 					} else {
-						strengthFill.style.backgroundColor = '#28a745';
+						strengthFill.style.backgroundColor = "#28a745";
 					}
 				}
 			}
@@ -1564,7 +1659,9 @@
 
 			// Load categories display
 			function loadCategoriesDisplay() {
-				const container = document.getElementById("categoriesContainer");
+				const container = document.getElementById(
+					"categoriesContainer"
+				);
 				container.innerHTML = categories
 					.map(
 						(cat) => `
@@ -1608,11 +1705,15 @@
 					: "Dodaj kategorię";
 				document.getElementById("categoryId").value = key;
 				document.getElementById("categoryName").value = name;
-				document.getElementById("categoryModal").classList.add("active");
+				document
+					.getElementById("categoryModal")
+					.classList.add("active");
 			};
 
 			window.closeCategoryModal = function () {
-				document.getElementById("categoryModal").classList.remove("active");
+				document
+					.getElementById("categoryModal")
+					.classList.remove("active");
 				document.getElementById("categoryForm").reset();
 			};
 
@@ -1717,64 +1818,79 @@
 			};
 
 			// Category form submit - Updated to use API
-			document.getElementById("categoryForm").addEventListener("submit", async function (e) {
-				e.preventDefault();
+			document
+				.getElementById("categoryForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
 
-				const name = document.getElementById("categoryName").value.trim();
-				const existingKey = document.getElementById("categoryId").value;
+					const name = document
+						.getElementById("categoryName")
+						.value.trim();
+					const existingKey =
+						document.getElementById("categoryId").value;
 
-				if (!name) {
-					showAlert(
-						"Nazwa kategorii jest wymagana!",
-						"error",
-						"alertContainer2"
-					);
-					return;
-				}
-
-				try {
-					let response;
-					if (existingKey) {
-						// Edit existing category
-						response = await fetch(`/api/categories/${existingKey}`, {
-							method: "PUT",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ name: name }),
-						});
-					} else {
-						// Add new category
-						response = await fetch("/api/categories", {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ name: name }),
-						});
-					}
-
-					const result = await response.json();
-
-					if (result.success) {
+					if (!name) {
 						showAlert(
-							existingKey
-								? "Kategoria została zaktualizowana!"
-								: "Kategoria została dodana!",
-							"success",
+							"Nazwa kategorii jest wymagana!",
+							"error",
 							"alertContainer2"
 						);
-						await loadCategories();
-						loadCategoriesDisplay();
-						loadCategoriesIntoSelects();
-						closeCategoryModal();
-					} else {
+						return;
+					}
+
+					try {
+						let response;
+						if (existingKey) {
+							// Edit existing category
+							response = await fetch(
+								`/api/categories/${existingKey}`,
+								{
+									method: "PUT",
+									headers: {
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify({ name: name }),
+								}
+							);
+						} else {
+							// Add new category
+							response = await fetch("/api/categories", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({ name: name }),
+							});
+						}
+
+						const result = await response.json();
+
+						if (result.success) {
+							showAlert(
+								existingKey
+									? "Kategoria została zaktualizowana!"
+									: "Kategoria została dodana!",
+								"success",
+								"alertContainer2"
+							);
+							await loadCategories();
+							loadCategoriesDisplay();
+							loadCategoriesIntoSelects();
+							closeCategoryModal();
+						} else {
+							showAlert(
+								result.error ||
+									"Błąd podczas zapisywania kategorii",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
 						showAlert(
-							result.error || "Błąd podczas zapisywania kategorii",
+							"Błąd połączenia",
 							"error",
 							"alertContainer2"
 						);
 					}
-				} catch (error) {
-					showAlert("Błąd połączenia", "error", "alertContainer2");
-				}
-			});
+				});
 
 			// Load statistics
 			async function loadStats() {
@@ -1782,7 +1898,8 @@
 					const response = await fetch("/api/stats");
 					const stats = await response.json();
 
-					const statsContainer = document.getElementById("statsContainer");
+					const statsContainer =
+						document.getElementById("statsContainer");
 					statsContainer.innerHTML = `
                     <div class="stat-card">
                         <div class="stat-number">${stats.totalImages}</div>
@@ -1873,115 +1990,241 @@
 			}
 
 			// Upload image
-			document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-				e.preventDefault();
+			document
+				.getElementById("uploadForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
 
-				const formData = new FormData(e.target);
+					const formData = new FormData(e.target);
 
-				try {
-					const response = await fetch("/api/images/upload", {
-						method: "POST",
-						body: formData,
-					});
+					try {
+						const response = await fetch("/api/images/upload", {
+							method: "POST",
+							body: formData,
+						});
 
-					const result = await response.json();
+						const result = await response.json();
 
-					if (result.success) {
+						if (result.success) {
+							showAlert(
+								"Zdjęcie zostało dodane pomyślnie!",
+								"success",
+								"alertContainer2"
+							);
+							e.target.reset();
+							document.getElementById(
+								"previewImage"
+							).style.display = "none";
+							loadImages();
+							loadStats();
+						} else {
+							showAlert(
+								result.error ||
+									"Błąd podczas dodawania zdjęcia",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
 						showAlert(
-							"Zdjęcie zostało dodane pomyślnie!",
-							"success",
-							"alertContainer2"
-						);
-						e.target.reset();
-						document.getElementById("previewImage").style.display = "none";
-						loadImages();
-						loadStats();
-					} else {
-						showAlert(
-							result.error ||
-								"Błąd podczas dodawania zdjęcia",
+							"Błąd połączenia",
 							"error",
 							"alertContainer2"
 						);
 					}
-				} catch (error) {
-					showAlert(
-						"Błąd połączenia",
-						"error",
-						"alertContainer2"
-					);
-				}
-			});
+				});
 
 			// File preview
-			document.getElementById("imageFile").addEventListener("change", function (e) {
-				const file = e.target.files[0];
-				const preview = document.getElementById("previewImage");
+			document
+				.getElementById("imageFile")
+				.addEventListener("change", function (e) {
+					const file = e.target.files[0];
+					const preview = document.getElementById("previewImage");
 
-				if (file) {
-					const reader = new FileReader();
-					reader.onload = function (e) {
-						preview.src = e.target.result;
-						preview.style.display = "block";
-					};
-					reader.readAsDataURL(file);
-				} else {
-					preview.style.display = "none";
-				}
-			});
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = function (e) {
+							preview.src = e.target.result;
+							preview.style.display = "block";
+						};
+						reader.readAsDataURL(file);
+					} else {
+						preview.style.display = "none";
+					}
+				});
 
 			// Category filter
-			document.getElementById("categoryFilter").addEventListener("change", function (e) {
-				loadImages(e.target.value);
-			});
+			document
+				.getElementById("categoryFilter")
+				.addEventListener("change", function (e) {
+					loadImages(e.target.value);
+				});
 
 			// Refresh button
-			document.getElementById("refreshBtn").addEventListener("click", function () {
-				const category = document.getElementById("categoryFilter").value;
-				loadImages(category);
-				loadStats();
-			});
+			document
+				.getElementById("refreshBtn")
+				.addEventListener("click", function () {
+					const category =
+						document.getElementById("categoryFilter").value;
+					loadImages(category);
+					loadStats();
+				});
 
 			// Edit form submit
-			document.getElementById("editForm").addEventListener("submit", async function (e) {
-				e.preventDefault();
+			document
+				.getElementById("editForm")
+				.addEventListener("submit", async function (e) {
+					e.preventDefault();
 
-				const id = document.getElementById("editImageId").value;
-				const data = {
-					title: document.getElementById("editTitle").value,
-					description: document.getElementById("editDescription").value,
-					category: document.getElementById("editCategory").value,
-				};
+					const id = document.getElementById("editImageId").value;
+					const data = {
+						title: document.getElementById("editTitle").value,
+						description:
+							document.getElementById("editDescription").value,
+						category: document.getElementById("editCategory").value,
+					};
 
-				try {
-					const response = await fetch(`/api/images/${id}`, {
-						method: "PUT",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify(data),
-					});
+					try {
+						const response = await fetch(`/api/images/${id}`, {
+							method: "PUT",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify(data),
+						});
 
-					const result = await response.json();
+						const result = await response.json();
 
-					if (result.success) {
+						if (result.success) {
+							showAlert(
+								"Zdjęcie zostało zaktualizowane!",
+								"success",
+								"alertContainer2"
+							);
+							closeEditModal();
+							loadImages(
+								document.getElementById("categoryFilter").value
+							);
+						} else {
+							showAlert(
+								result.error || "Błąd podczas aktualizacji",
+								"error",
+								"alertContainer2"
+							);
+						}
+					} catch (error) {
 						showAlert(
-							"Zdjęcie zostało zaktualizowane!",
-							"success",
-							"alertContainer2"
-						);
-						closeEditModal();
-						loadImages(document.getElementById("categoryFilter").value);
-					} else {
-						showAlert(
-							result.error || "Błąd podczas aktualizacji",
+							"Błąd połączenia",
 							"error",
 							"alertContainer2"
 						);
 					}
-				} catch (error) {
-					showAlert(
-						"Błąd połączenia",
-						"error",
-						"alertContainer2"
+				});
+
+			// Password requirements live feedback for account modal (✓/✗ emoji update, fix for "Wielka litera")
+			document.addEventListener("DOMContentLoaded", function () {
+				const pwInput = document.querySelector(
+					"#accountModal #newPassword"
+				);
+				if (pwInput) {
+					pwInput.addEventListener("input", function (e) {
+						const password = e.target.value;
+						const requirements = {
+							length: password.length >= 8,
+							upper: /[A-ZĄĆĘŁŃÓŚŹŻ]/.test(password),
+							lower: /[a-ząćęłńóśźż]/.test(password),
+							number: /\d/.test(password),
+							special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+						};
+						const reqs = [
+							{
+								el: document.getElementById("req-length"),
+								ok: requirements.length,
+							},
+							{
+								el: document.getElementById("req-upper"),
+								ok: requirements.upper,
+							},
+							{
+								el: document.getElementById("req-lower"),
+								ok: requirements.lower,
+							},
+							{
+								el: document.getElementById("req-number"),
+								ok: requirements.number,
+							},
+							{
+								el: document.getElementById("req-special"),
+								ok: requirements.special,
+							},
+						];
+						reqs.forEach(({ el, ok }) => {
+							if (el) {
+								el.classList.toggle("valid", ok);
+								// Only show emoji inside text, not with ::before
+								const label = el.textContent.replace(
+									/^✓ |^✗ /,
+									""
+								);
+								el.innerHTML = (ok ? "✓ " : "✗ ") + label;
+							}
+						});
+
+						const validCount = reqs.filter((r) => r.ok).length;
+						const strengthFill = document.querySelector(
+							"#accountModal .strength-fill"
+						);
+						if (strengthFill) {
+							strengthFill.style.width = validCount * 20 + "%";
+							if (validCount === 5) {
+								strengthFill.style.backgroundColor = "#28a745";
+							} else if (validCount >= 3) {
+								strengthFill.style.backgroundColor = "#ffc107";
+							} else {
+								strengthFill.style.backgroundColor = "#dc3545";
+							}
+						}
+					});
+					// Initial state
+					pwInput.dispatchEvent(new Event("input"));
+				}
+			});
+
+			// Real-time password match validation for account modal (compare char by char)
+			document.addEventListener("DOMContentLoaded", function () {
+				const newPasswordInput = document.querySelector(
+					"#accountModal #newPassword"
+				);
+				const confirmPasswordInput = document.querySelector(
+					"#accountModal #confirmPassword"
+				);
+				const matchError =
+					document.getElementById("passwordMatchError");
+
+				function checkPasswordMatch() {
+					const newVal = newPasswordInput.value;
+					const confirmVal = confirmPasswordInput.value;
+					// Show error as soon as any character is different and both fields are non-empty
+					if (
+						newVal.length > 0 &&
+						confirmVal.length > 0 &&
+						newVal !== confirmVal
+					) {
+						matchError.textContent =
+							"Nowe hasła nie są identyczne!";
+						matchError.style.display = "block";
+					} else {
+						matchError.textContent = "";
+						matchError.style.display = "none";
+					}
+				}
+
+				if (newPasswordInput && confirmPasswordInput && matchError) {
+					newPasswordInput.addEventListener(
+						"input",
+						checkPasswordMatch
+					);
+					confirmPasswordInput.addEventListener(
+						"input",
+						checkPasswordMatch
 					);
 				}
 			});
@@ -1995,7 +2238,7 @@
 			function showAlert(message, type, containerId = "alertContainer") {
 				const container = document.getElementById(containerId);
 				if (!container) return;
-				
+
 				const alert = document.createElement("div");
 				alert.className = `alert alert-${type}`;
 				alert.textContent = message;
